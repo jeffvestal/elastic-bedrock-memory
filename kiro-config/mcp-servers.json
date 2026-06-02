@@ -1,10 +1,9 @@
 {
-  "servers": {
+  "mcpServers": {
     "elastic-memory": {
-      "type": "http",
-      "url": "${KIBANA_URL}/api/agent_builder/mcp",
+      "url": "https://YOUR-KIBANA-URL.kb.us-east-1.aws.elastic.cloud/api/agent_builder/mcp",
       "headers": {
-        "Authorization": "ApiKey ${KIBANA_API_KEY}",
+        "Authorization": "ApiKey YOUR_KIBANA_API_KEY",
         "kbn-xsrf": "true",
         "Accept": "application/json"
       }

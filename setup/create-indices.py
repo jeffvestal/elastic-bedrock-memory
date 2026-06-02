@@ -1,6 +1,6 @@
 """
 Create Elasticsearch indices for the Memory-as-a-Service demo.
-Uses semantic_text field type (ELSER) for semantic recall.
+Uses semantic_text field type (Jina embeddings) for semantic recall.
 """
 import os
 import sys

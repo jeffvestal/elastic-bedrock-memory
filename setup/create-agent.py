@@ -13,21 +13,15 @@ load_dotenv()
 KIBANA_URL = os.environ["KIBANA_URL"].rstrip("/")
 
 # Support both API key and username/password auth
-if os.environ.get("KIBANA_API_KEY"):
-    auth_header = f"ApiKey {os.environ['KIBANA_API_KEY']}"
-    HEADERS = {
-        "Authorization": auth_header,
-        "Content-Type": "application/json",
-        "kbn-xsrf": "true",
-    }
-    session = requests.Session()
-    session.headers.update(HEADERS)
+# Prefer username/password if set (needed for initial setup — Kibana REST API requires Kibana-native key or basic auth)
+session = requests.Session()
+session.headers.update({"Content-Type": "application/json", "kbn-xsrf": "true", "Accept": "application/json"})
+if os.environ.get("KIBANA_USER") and os.environ.get("KIBANA_PASSWORD"):
+    session.auth = (os.environ["KIBANA_USER"], os.environ["KIBANA_PASSWORD"])
+elif os.environ.get("KIBANA_API_KEY"):
+    session.headers["Authorization"] = f"ApiKey {os.environ['KIBANA_API_KEY']}"
 else:
-    user = os.environ["KIBANA_USER"]
-    pw = os.environ["KIBANA_PASSWORD"]
-    session = requests.Session()
-    session.auth = (user, pw)
-    session.headers.update({"Content-Type": "application/json", "kbn-xsrf": "true"})
+    raise ValueError("Set KIBANA_USER+KIBANA_PASSWORD or KIBANA_API_KEY in .env")
 
 
 TOOLS = [
@@ -51,7 +45,8 @@ TOOLS = [
         "description": "Retrieve the most recent conversation turns across all sessions to see what was last worked on.",
         "tags": ["memory", "recent"],
         "configuration": {
-            "query": 'FROM `conversation-history` | SORT timestamp DESC | LIMIT 20 | KEEP session_id, timestamp, role, content, topic_tags'
+            "query": 'FROM `conversation-history` | SORT timestamp DESC | LIMIT 20 | KEEP session_id, timestamp, role, content, topic_tags',
+            "params": {},
         },
     },
     {
@@ -60,7 +55,8 @@ TOOLS = [
         "description": "List all past development sessions with their summaries and topics — useful to understand what phases of the project have been covered.",
         "tags": ["memory", "sessions"],
         "configuration": {
-            "query": "FROM `session-metadata` | SORT start_time DESC | KEEP session_id, start_time, summary, topics"
+            "query": "FROM `session-metadata` | SORT start_time DESC | KEEP session_id, start_time, summary, topics",
+            "params": {},
         },
     },
 ]
@@ -103,10 +99,15 @@ def upsert_tool(tool):
     resp = session.post(f"{KIBANA_URL}/api/agent_builder/tools", json=tool)
     if resp.status_code in (200, 201):
         tid = resp.json().get("id", tool["id"])
-        print(f"  ✓ {tool['id']}: {tid}")
+        print(f"  ✓ {tool['id']}: created")
         return tid
-    elif resp.status_code == 409:
-        print(f"  ~ {tool['id']}: already exists")
+    elif resp.status_code in (409, 400) and "already exists" in resp.text:
+        # Update existing tool
+        resp2 = session.put(f"{KIBANA_URL}/api/agent_builder/tools/{tool['id']}", json=tool)
+        if resp2.status_code in (200, 201):
+            print(f"  ~ {tool['id']}: updated")
+        else:
+            print(f"  ~ {tool['id']}: already exists (skipped)")
         return tool["id"]
     else:
         print(f"  ✗ {tool['id']}: {resp.status_code} {resp.text[:200]}")

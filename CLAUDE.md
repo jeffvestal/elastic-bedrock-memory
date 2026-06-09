@@ -16,6 +16,7 @@
 | 67 seeded docs (10 checkout service dev sessions) | ✅ live | `demo-data/seed.py` |
 | Agent Builder agent + 4 MCP tools | ✅ live | Kibana → Agent Builder |
 | Kiro MCP wired globally | ✅ | `~/.kiro/settings/mcp.json` |
+| Kiro agent config (Skill) | ✅ | `kiro-config/checkout-memory-agent.json` |
 | Semantic search verified end-to-end | ✅ | "which DB did we choose?" → correct answer |
 | GitHub repo (private) | ✅ | github.com/jeffvestal/elastic-bedrock-memory |
 | Slide deck (26 slides, Google Slides) | ✅ | see kuchi-kopi project file for link |
@@ -71,7 +72,8 @@ setup/
 demo-data/
   seed.py              # Seeds 67 docs across 10 checkout service sessions
 kiro-config/
-  mcp-servers.json     # Template Kiro MCP config (placeholder values)
+  mcp-servers.json              # Template Kiro MCP config (placeholder values)
+  checkout-memory-agent.json    # Kiro agent config / Skill (copy to ~/.kiro/agents/)
 demo_scripts/
   aws-summit-2026-navattic-shot-sheet.md   # Click-by-click Navattic recording guide
   aws-summit-2026-practice-guide.md        # 60-min stage practice script
@@ -83,15 +85,15 @@ docs/                  # Architecture diagrams (TBD)
 ## Demo Scenario
 
 Developer building a checkout service over 10 sessions (~2 weeks). Seeded data includes:
-- DB choice: Aurora PostgreSQL (DynamoDB eliminated — eventual consistency failed cart totals)
-- Auth: JWT with refresh tokens (OAuth considered, eliminated — complexity)
-- Payment: Stripe (Braintree considered, eliminated — SDK quality)
-- Recent work (session 10): Stripe webhook handler, idempotency keys
+- DB choice: Aurora PostgreSQL — ACID transactions for payment integrity, relational JOINs for reporting
+- Auth: JWT (15 min) + refresh tokens; opaque tokens rejected (introspection latency per request)
+- Payment: Stripe (Braintree considered, eliminated — SDK quality and webhook reliability)
+- Recent work (session 10): Observability setup — structured JSON logs to CloudWatch, X-Ray tracing, correlation IDs
 
 Demo questions that work:
-- "Which database did we choose and why?" → `search-knowledge-facts` → PostgreSQL/Aurora
-- "What auth approach did we decide on?" → `search-knowledge-facts` → JWT
-- "What did we work on in the last session?" → `get-recent-conversations` → Stripe webhook
+- "Which database did we choose and why?" → `search-knowledge-facts` → Aurora PostgreSQL (session 1)
+- "What auth approach did we decide on? JWT or opaque tokens?" → `search-knowledge-facts` → JWT, opaque tokens rejected
+- "What did we work on in the last session?" → `get-recent-conversations` → CloudWatch/X-Ray observability
 
 ---
 

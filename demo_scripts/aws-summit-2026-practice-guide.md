@@ -32,6 +32,8 @@ AI agents have amnesia. Every session starts at zero — no memory of what decis
 
 **Jina semantic embeddings, zero pipeline.** One field type — `semantic_text` — auto-vectorizes at ingest. No embedding pipeline to build, maintain, or monitor.
 
+**Kiro Skills wire the instinct.** A Kiro agent config (the Skill) tells Kiro when to consult memory. The MCP config provides the tools; the Skill provides the behavior. Both ship in the repo.
+
 **Cross-session, cross-machine, cross-team.** The memory store is Elasticsearch. Any agent, any machine, any team member — same memory.
 
 **Observable and auditable.** Every agent call is logged in Kibana Conversations. Every tool call shows what was queried and what was returned. Not a black box.
@@ -125,17 +127,17 @@ The practical unlocks:
 **Slide 11 — "Architecture overview"**
 
 **Saying:**
-> "The full stack is three boxes. Kiro — Amazon Bedrock, free tier, Claude Sonnet — is the agentic IDE. Elastic Agent Builder is the memory server. It exposes a native MCP endpoint at your Kibana URL. Kiro speaks directly to it — no custom MCP server, no middleware to build or operate. Agent Builder executes the memory tools against Elasticsearch and returns results."
+> "The architecture has two paths. Kiro talks to Amazon Bedrock for inference — that's the model doing the thinking, running in your AWS account. Kiro also talks to Elastic Agent Builder for memory — that's the persistent store. Two jobs, two services. Bedrock handles inference. Elastic handles memory."
 
 > *(point at diagram)*
-> "Kiro. Agent Builder. Elasticsearch. That's it."
+> "Agent Builder exposes a native MCP endpoint. Kiro connects to it. No custom server, no middleware. Bedrock. Agent Builder. Elasticsearch."
 
 **Slide 12 — "Jina powers semantic recall"**
 
 **Saying:**
 > "A quick note on the embedding layer, because this is where the magic happens. Elastic's `semantic_text` field type uses Jina v5 embeddings by default. You declare one field. At ingest, Jina vectorizes the content automatically. At query time, Agent Builder calls `nlQuery` with a natural language question — Jina encodes it, Elasticsearch runs the vector search, fuses it with BM25. You get back the semantically closest documents."
 
-> "The developer asks: 'which database did we choose and why?' The answer comes back: Aurora PostgreSQL, session 3, because DynamoDB's eventual consistency failed cart total accuracy. Not because those exact words were in the question — because the meaning matched."
+> "The developer asks: 'which database did we choose and why?' The answer comes back: Aurora PostgreSQL, session 1, ACID transactions for payment integrity, relational JOINs for reporting, Aurora Serverless v2 for scale. Not because those exact words were in the question — because the meaning matched."
 
 **They should think:** *This is how semantic search actually works in practice. One field type, automatic.*
 
@@ -165,14 +167,16 @@ The practical unlocks:
 **Saying:**
 > "Four tools in the agent: search-conversation-history, search-knowledge-facts, get-recent-conversations, list-sessions. Two semantic search, two ES|QL. Configured once in Kibana. Exposed via MCP to any IDE that supports the protocol. Create the tools programmatically — the repo has the script."
 
-**Slide 18 — "MCP wiring"**
+**Slide 18 — "MCP wiring + Kiro Skill"**
 
 **Saying:**
-> "The MCP config is literally three lines of JSON. URL: your Kibana URL plus `/api/agent_builder/mcp`. Authorization header: API key. Two more headers required by the Kibana API. Drop this into Kiro's MCP settings, restart Kiro, and your agent has four memory tools available."
+> "Two config files. First: the MCP config — three lines of JSON. URL: your Kibana URL plus `/api/agent_builder/mcp`. Authorization header, two more required headers. Drop this into Kiro's MCP settings. That wires the tools."
 
-> "There's no custom server. No middleware. The endpoint is built into Elastic Agent Builder."
+> "Second: a Kiro agent Skill. A JSON config in `~/.kiro/agents/` with a system prompt and a tools list. The prompt says: before answering project questions, check memory first. The tools list references the four elastic-memory tools. That wires the instinct."
 
-**They should think:** *I could set this up this afternoon.*
+> "Both files ship in the repo. Copy them, fill in your credentials, restart Kiro. Your agent has persistent memory."
+
+**They should think:** *Two config files. I could set this up this afternoon.*
 
 ---
 
@@ -181,7 +185,9 @@ The practical unlocks:
 **Before Navattic plays:**
 
 **Saying:**
-> "Let me show you what this looks like in practice. The scenario: I'm a developer who's been building a checkout service. Ten sessions over two weeks. Decisions made, bugs fixed, architecture choices locked in. Watch what happens when I ask the agent about the project."
+> "Let me show you what this looks like in practice. The scenario: I'm a developer who's been building a checkout service. Ten sessions over two weeks. Decisions made, bugs fixed, architecture choices locked in."
+
+> "First I'll show you what Kiro already does — within a session, it remembers. Then what happens in a new session without memory wired. Then what it looks like when Elastic is in the stack."
 
 > *(transition to Navattic)*
 
@@ -189,7 +195,7 @@ The practical unlocks:
 
 *(brief pause)*
 
-> "That's it. No context stuffing, no retrieval pipeline, no custom server. One config file. Persistent memory."
+> "That's it. No context stuffing, no retrieval pipeline, no custom server. Two config files. Persistent memory."
 
 ---
 
@@ -198,12 +204,16 @@ The practical unlocks:
 **Slide 20 — "What just happened"**
 
 **Saying:**
-> "When I asked 'which database?' — the agent called search-knowledge-facts. Jina encoded the question. Elasticsearch returned the closest semantic match from the knowledge-facts index. The answer was Aurora PostgreSQL — with the reasoning, and the session it came from. It didn't hallucinate. It retrieved."
+> "Scene by scene. Within-session: Kiro remembered what I told it — that's working memory, and it works out of the box. New session, no memory wired: amnesia. Cross-session memory question gets 'I don't have access.' That's the default."
+
+> "With Elastic wired: 'which database?' — the agent called search-knowledge-facts. Jina encoded the question. Elasticsearch returned the closest semantic match from the knowledge-facts index. Aurora PostgreSQL, with the reasoning, from session 1, two weeks ago. It didn't hallucinate. It retrieved."
+
+> "Then we wrote a new decision: Cloudflare CDN, 5-minute TTL. save-knowledge-fact — an Elastic Workflow triggered by Agent Builder. Document written to Elasticsearch. Fresh session, same question: 'What CDN are we using?' — retrieved immediately. That's not a demo trick. That's the write path. Memory isn't pre-seeded — it's whatever you tell it."
 
 **Slide 21 — "Key design decisions"**
 
 **Saying:**
-> "A few things that made this work. `semantic_text` with Jina: no embedding pipeline — declare the field, ingest, done. Agent Builder as the MCP server: no proxy layer to build or deploy. ES|QL plus semantic search from the same cluster: structured and fuzzy recall in one place. Three-index schema: conversation turns, extracted facts, session metadata — each independently queryable."
+> "A few things that made this work. `semantic_text` with Jina: no embedding pipeline — declare the field, ingest, done. Agent Builder as the MCP server: no proxy layer to build or deploy. The Kiro Skill: a two-line agent config that teaches Kiro when to reach for memory — without it, you'd have to remind the agent every session. ES|QL plus semantic search from the same cluster: structured and fuzzy recall in one place. Three-index schema: conversation turns, extracted facts, session metadata — each independently queryable."
 
 **Slide 22 — "Scale properties"**
 
@@ -219,14 +229,14 @@ The practical unlocks:
 **Slide 24 — "The repo"**
 
 **Saying:**
-> "Everything I just showed you is in the repo. `github.com/jeffvestal/elastic-bedrock-memory`. Three setup scripts: create-indices, create-agent — that builds the Agent Builder agent and all four tools programmatically — and seed, which loads demo data. Plus the Kiro MCP config template."
+> "Everything I just showed you is in the repo. `github.com/jeffvestal/elastic-bedrock-memory`. Three setup scripts: create-indices, create-agent — that builds the Agent Builder agent and all four tools programmatically — and seed, which loads demo data. Plus two Kiro config templates: the MCP server config and the agent Skill."
 
 > "Companion blog has the full walkthrough with architecture diagrams and code deep-dive. Link on the closing slide."
 
 **Slide 25 — "5-minute quickstart"**
 
 **Saying:**
-> "Clone the repo. Configure your `.env` with ES URL, Kibana URL, API keys. Run the three setup scripts. Copy the Kiro MCP config. Restart Kiro. Ask your agent about the project."
+> "Clone the repo. Configure your `.env` with ES URL, Kibana URL, API keys. Run the three setup scripts. Copy the two Kiro configs — the MCP server config and the agent Skill — into `~/.kiro/`. Restart Kiro. Ask your agent about the project."
 
 > "If you have an Elastic Cloud account — which if you don't, free trial at cloud.elastic.co — the whole setup is about five minutes."
 
@@ -251,7 +261,7 @@ The practical unlocks:
 | Amnesia Problem | Stateless by default. Context windows are a workaround, not a solution. |
 | Memory-as-a-Service | Elasticsearch is already the right store — you just haven't wired it to your agents yet. |
 | How It's Built | Three indices, four tools, one config file. |
-| Demo | The agent recalled a decision from two weeks ago, with the reasoning. |
+| Demo | Kiro remembered within-session. New session = amnesia. With Elastic: recalled a decision from two weeks ago, with the reasoning. |
 | Recap | Semantic retrieval, not hallucination. The answer came from your data. |
 | Build It | Clone, configure, run three scripts, restart Kiro. Five minutes. |
 
@@ -261,7 +271,7 @@ The practical unlocks:
 
 **The problem you solved:** AI agents today are stateless. They know your codebase. They have no idea what your team decided in a meeting last Thursday, or why you chose PostgreSQL over DynamoDB, or what that 2am incident was about. The context window workaround is expensive, ephemeral, and doesn't scale.
 
-**What you showed:** Elasticsearch as persistent agent memory, wired into Kiro via Elastic Agent Builder's native MCP endpoint. Jina semantic embeddings for natural-language recall. ES|QL for structured queries. A three-index schema that separates conversation turns, extracted facts, and session metadata.
+**What you showed:** Elasticsearch as persistent agent memory, wired into Kiro via Elastic Agent Builder's native MCP endpoint. A Kiro agent Skill (two config files) that makes memory-first behavior automatic. Jina semantic embeddings for natural-language recall. ES|QL for structured queries. A three-index schema that separates conversation turns, extracted facts, and session metadata.
 
 **Why Elastic:** Agent Builder handles tool grounding, MCP serving, conversation logging, and audit trails — in Kibana, which they may already have. The MCP endpoint is built in. No custom server to write, deploy, or operate.
 

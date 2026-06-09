@@ -77,11 +77,13 @@ TOOLS = [
 
 
 def handle_save(args):
+    fact_text = args["fact"]
     doc = {
         "session_id": args.get("session_id", "agent-write"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "category": args.get("category", "general"),
-        "fact": args["fact"],
+        "fact": fact_text,
+        "fact_semantic": fact_text,  # semantic_text field — must be set explicitly
         "project": args.get("project", "checkout-service"),
         "importance": args.get("importance", "medium"),
     }

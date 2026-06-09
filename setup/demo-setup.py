@@ -295,6 +295,9 @@ def run_setup():
         print(f"\n  ❌  validate-write-path.py exited {result.returncode} — fix above errors before continuing.")
         sys.exit(result.returncode)
 
+    # Reload .env so WORKFLOW_ID written by validate-write-path.py is in os.environ
+    load_dotenv(override=True)
+
     print("\nStep 2/2 — Agent Builder agent + tools...")
     result = subprocess.run(
         ["python3", os.path.join(scripts_dir, "create-agent.py")],

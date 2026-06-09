@@ -68,6 +68,7 @@ steps:
         timestamp: "{{inputs.timestamp}}"
         category: "{{inputs.category}}"
         fact: "{{inputs.fact}}"
+        fact_semantic: "{{inputs.fact}}"
         project: "{{inputs.project}}"
         importance: "{{inputs.importance}}"
 """
@@ -105,16 +106,29 @@ def get_existing_workflow(kib, workflow_id):
 def create_workflow(kib):
     """Create the save-knowledge-fact workflow. Returns workflow_id."""
     print("  Creating save-knowledge-fact workflow...")
-    resp = kib.post(f"{KIBANA_URL}/api/workflows", json={"yaml": WORKFLOW_YAML}, timeout=30)
+    resp = kib.post(f"{KIBANA_URL}/api/workflows", json={"workflows": [{"yaml": WORKFLOW_YAML}]}, timeout=30)
     if resp.status_code not in (200, 201):
         print(f"  ❌  Workflow creation failed: HTTP {resp.status_code}")
         print(f"      Response: {resp.text[:400]}")
         sys.exit(1)
     data = resp.json()
-    workflow_id = data.get("id") or data.get("workflow_id")
-    if not workflow_id:
-        print(f"  ❌  No workflow_id in response: {data}")
+    # Response: {"created": [...], "failed": [...]}
+    failed = data.get("failed", [])
+    created = data.get("created", [])
+    if failed:
+        print(f"  ❌  Workflow creation failed: {failed}")
         sys.exit(1)
+    if not created:
+        print(f"  ❌  No workflow created — unexpected response: {data}")
+        sys.exit(1)
+    entry = created[0]
+    workflow_id = entry.get("id")
+    if not workflow_id:
+        print(f"  ❌  No id in created workflow: {entry}")
+        sys.exit(1)
+    if not entry.get("valid", True):
+        print(f"  ⚠️   Workflow created but marked invalid — check YAML. Proceeding anyway.")
+        print(f"      entry: {entry}")
     print(f"  ✅  Workflow created: {workflow_id}")
     return workflow_id
 
@@ -132,11 +146,13 @@ def test_es_inference(es, cleanup=False):
     """Write a test doc directly to ES and verify fact_semantic populates."""
     print("\n--- Check 2: Jina inference on write ---")
     ts = datetime.now(timezone.utc).isoformat()
+    fact_text = "Validation test: Cloudflare CDN with 5-minute TTL for static assets"
     doc = {
         "session_id": TEST_DOC_SESSION,
         "timestamp": ts,
         "category": "infrastructure",
-        "fact": "Validation test: Cloudflare CDN with 5-minute TTL for static assets",
+        "fact": fact_text,
+        "fact_semantic": fact_text,  # semantic_text field — must be set explicitly; ES calls inference on ingest
         "project": "checkout-service",
         "importance": "high",
     }

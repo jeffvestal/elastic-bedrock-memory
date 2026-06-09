@@ -2,17 +2,19 @@
 Demo setup, status check, and reset for elastic-bedrock-memory (AWS Summit NYC 2026).
 
 Usage:
-  python setup/demo-setup.py            # status check + pre-demo checklist
-  python setup/demo-setup.py --reset    # wipe docs + re-seed + re-create agent
-  python setup/demo-setup.py --nuclear  # delete + recreate indices + full rebuild
-  python setup/demo-setup.py --prep     # remove elastic-memory from mcp.json (pre-recording state)
-  python setup/demo-setup.py --add-mcp  # restore elastic-memory to mcp.json (post-Scene-3 state)
+  python3 setup/demo-setup.py            # status check + pre-demo checklist
+  python3 setup/demo-setup.py --setup    # first-time: create workflow + agent (enables write path)
+  python3 setup/demo-setup.py --reset    # wipe docs + re-seed + re-create agent
+  python3 setup/demo-setup.py --nuclear  # delete + recreate indices + full rebuild
+  python3 setup/demo-setup.py --prep     # remove elastic-memory from mcp.json (pre-recording state)
+  python3 setup/demo-setup.py --add-mcp  # restore elastic-memory to mcp.json (post-Scene-3 state)
 """
 import argparse
 import base64
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 
 import requests
@@ -279,6 +281,32 @@ def recreate_agent():
     agent_mod.upsert_agent(agent_mod.AGENT)
 
 
+def run_setup():
+    """First-time setup: create workflow (write path) + create agent."""
+    print("\n=== First-Time Setup: Write Path + Agent ===\n")
+    scripts_dir = os.path.join(BASE_DIR, "setup")
+
+    print("Step 1/2 — Workflow + Jina inference validation...")
+    result = subprocess.run(
+        ["python3", os.path.join(scripts_dir, "validate-write-path.py")],
+        env={**os.environ},
+    )
+    if result.returncode not in (0, 4):  # 4 = execute endpoint not found (non-fatal)
+        print(f"\n  ❌  validate-write-path.py exited {result.returncode} — fix above errors before continuing.")
+        sys.exit(result.returncode)
+
+    print("\nStep 2/2 — Agent Builder agent + tools...")
+    result = subprocess.run(
+        ["python3", os.path.join(scripts_dir, "create-agent.py")],
+        env={**os.environ},
+    )
+    if result.returncode != 0:
+        print(f"\n  ❌  create-agent.py exited {result.returncode}")
+        sys.exit(result.returncode)
+
+    print("\n  ✅  Setup complete. Run:  python3 setup/demo-setup.py  to verify status.\n")
+
+
 def reset(nuclear=False):
     print("\n=== Resetting Demo State ===\n")
     es = es_client()
@@ -302,13 +330,13 @@ def reset(nuclear=False):
 def print_checklist():
     print("=== Pre-Demo Checklist (manual steps) ===\n")
     print("  Before recording:")
-    print("    [ ] Re-seed within 2 weeks of recording:  python setup/demo-setup.py --reset")
+    print("    [ ] Re-seed within 2 weeks of recording:  python3 setup/demo-setup.py --reset")
     print("    [ ] ~/.kiro/agents/checkout-memory.json installed (copy from kiro-config/)")
     print("    [ ] Kiro chat panel cleared")
     print(f"    [ ] Browser open to {KIBANA_URL}/app/agent_builder")
     print("    [ ] Font 16px+ in both Kiro and Kibana")
     print("    [ ] Window 1920×1080, menubar/dock hidden")
-    print("    [ ] Test one tool call end-to-end (MCP live check)")
+    print("    [ ] Test Scene 5 Q4 write beat: save CDN decision, start new session, confirm read-back")
     print()
     print("  Scene 2-3 (within-session + stateless failure):")
     print("    [ ] Run --prep first (removes elastic-memory, resets checkout-service-demo README)")
@@ -319,15 +347,14 @@ def print_checklist():
     print("    [ ] Run --add-mcp (restores elastic-memory to mcp.json)")
     print("    [ ] Restart Kiro")
     print("    [ ] In Kiro: type /agent → select checkout-memory")
-    print("    [ ] Confirm elastic-memory shows 4 tools (/mcp list)")
+    print("    [ ] Confirm elastic-memory shows 5 tools (/mcp list — should include save-knowledge-fact)")
     print()
     print("  Commands:")
-    print("    python setup/validate-write-path.py    # create workflow + verify Jina inference (run once before create-agent)")
-    print("    python setup/create-agent.py           # create/update agent, tools, skill")
-    print("    python setup/demo-setup.py --prep      # remove elastic-memory from mcp.json (before Scenes 2-3)")
-    print("    python setup/demo-setup.py --add-mcp   # restore elastic-memory to mcp.json (before Scene 4)")
-    print("    python setup/demo-setup.py --reset     # wipe docs + re-seed + re-create agent")
-    print("    python setup/demo-setup.py --nuclear   # delete + recreate indices + full rebuild")
+    print("    python3 setup/demo-setup.py --setup    # first-time: create workflow + agent (enables write path)")
+    print("    python3 setup/demo-setup.py --prep     # remove elastic-memory from mcp.json (before Scenes 2-3)")
+    print("    python3 setup/demo-setup.py --add-mcp  # restore elastic-memory to mcp.json (before Scene 4)")
+    print("    python3 setup/demo-setup.py --reset    # wipe docs + re-seed + re-create agent")
+    print("    python3 setup/demo-setup.py --nuclear  # delete + recreate indices + full rebuild")
     print()
 
 
@@ -337,12 +364,15 @@ def print_checklist():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Demo setup + status check")
+    parser.add_argument("--setup", action="store_true", help="First-time: create workflow + agent (enables write path)")
     parser.add_argument("--reset", action="store_true", help="Wipe docs + re-seed + re-create agent")
     parser.add_argument("--nuclear", action="store_true", help="Delete + recreate indices + full rebuild")
     parser.add_argument("--prep", action="store_true", help="Remove elastic-memory from mcp.json (pre-recording state for Scenes 2-3)")
     parser.add_argument("--add-mcp", action="store_true", help="Add elastic-memory to mcp.json (post-Scene-3 state)")
     args = parser.parse_args()
 
+    if args.setup:
+        run_setup()
     if args.reset or args.nuclear:
         reset(nuclear=args.nuclear)
     if args.prep:

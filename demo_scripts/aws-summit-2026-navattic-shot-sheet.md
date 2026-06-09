@@ -30,14 +30,14 @@ Kiro running with checkout-service project, `~/.kiro/settings/mcp.json` wired to
 
 ### Step 1 — Data and infra (run from `elastic-bedrock-memory/`)
 ```bash
-# First-time only: create the write workflow and verify Jina inference
-python setup/validate-write-path.py
+# First-time only: create workflow + agent (write path setup)
+python3 setup/demo-setup.py --setup
 
 # Re-seed within 2 weeks of recording so timestamps look recent
-python setup/demo-setup.py --reset
+python3 setup/demo-setup.py --reset
 
 # Verify everything is green — should show 5/5 tools (read + write)
-python setup/demo-setup.py
+python3 setup/demo-setup.py
 ```
 
 ### Step 2 — Kiro Skill
@@ -48,14 +48,14 @@ cp kiro-config/checkout-memory-agent.json ~/.kiro/agents/checkout-memory.json
 ### Step 3 — Prep for recording (Scenes 2–3)
 ```bash
 # Removes elastic-memory from mcp.json + resets checkout-service-demo README
-python setup/demo-setup.py --prep
+python3 setup/demo-setup.py --prep
 ```
 Then restart Kiro. Scenes 2 and 3 run with NO memory tools.
 
 ### Step 4 — Between Scene 3 and Scene 4
 ```bash
 # Restores elastic-memory to mcp.json
-python setup/demo-setup.py --add-mcp
+python3 setup/demo-setup.py --add-mcp
 ```
 Then restart Kiro. Scene 4 shows adding the config; Scenes 5+ have full memory.
 
@@ -65,7 +65,7 @@ Then restart Kiro. Scene 4 shows adding the config; Scenes 5+ have full memory.
 - [ ] **Scene 4+:** launch Kiro from any directory with elastic-memory active
 - [ ] Test Scene 5 question sequence end-to-end: Q1 (DB) → Q2 (recent work) → Q3 (auth) → Q4 (save CDN) → Q4b (new session reads CDN) — verify each fires correct tool
 - [ ] Before Q4: confirm `save-knowledge-fact` tool shows in Kiro's `/mcp list` output
-- [ ] After Q4 save: verify doc count in `knowledge-facts` increased by 1 (`python setup/demo-setup.py` will show this)
+- [ ] After Q4 save: verify doc count in `knowledge-facts` increased by 1 (`python3 setup/demo-setup.py` will show this)
 - [ ] **Scene 6:** before recording, open Kibana chat with checkout-service-memory agent and ask "What payment processor did we choose, and why?" — verify tool call fires and response is correct; this also populates the Conversations tab
 
 ### Visual setup (all scenes)
@@ -127,7 +127,7 @@ Then restart Kiro. Scene 4 shows adding the config; Scenes 5+ have full memory.
 | # | Action | Capture? | Highlight / Hotspot |
 |---|--------|----------|---------------------|
 | 1 | `~/.kiro/settings/mcp.json` open — elastic-memory block absent (mcpServers empty or missing the entry) | ✅ Cap 4a | Hotspot: "mcp.json — Kiro's list of MCP servers. No elastic-memory yet." |
-| 2 | Terminal — run `python setup/demo-setup.py --add-mcp` — output shows "Added 'elastic-memory' to mcp.json" | ✅ Cap 4b | Hotspot on command: "One script. Adds the Elastic Agent Builder MCP endpoint to Kiro." |
+| 2 | Terminal — run `python3 setup/demo-setup.py --add-mcp` — output shows "Added 'elastic-memory' to mcp.json" | ✅ Cap 4b | Hotspot on command: "One script. Adds the Elastic Agent Builder MCP endpoint to Kiro." |
 | 3 | `~/.kiro/settings/mcp.json` open again — elastic-memory block now present: url pointing to `/api/agent_builder/mcp`, three headers | ✅ Cap 4c | Hotspot on `"url"` line: "Agent Builder's native MCP endpoint — no custom server to build or operate." Hotspot on headers: "Three headers. That's the entire integration." |
 | 4 | `~/.kiro/agents/checkout-memory.json` open — prompt visible, tools list showing `@elastic-memory/*` entries, `"model": null` | ✅ Cap 4d | Hotspot on prompt: "A Kiro agent Skill — tells Kiro: before answering project questions, check memory first." Hotspot on tools: "Each `@elastic-memory/` entry is a tool backed by Elasticsearch." Hotspot on `"model": null`: "Auto mode — Kiro runs on Amazon Bedrock. Inference and memory: separate, composable." |
 | 5 | Kiro — restart, type `/agent` → picker shows checkout-memory (Global) with description "Checkout service dev assistant with Elastic long-term memory" → select it | ✅ Cap 4e | Hotspot on checkout-memory row: "The Kiro Skill — installed globally, available in any project. Select it and Kiro knows to check Elastic memory first." Hotspot on 'Global' label: "One install, any project directory." |
@@ -226,7 +226,7 @@ Then restart Kiro. Scene 4 shows adding the config; Scenes 5+ have full memory.
 | 5 — Memory questions | Start new session, `/agent` → checkout-memory | Ask Q1 (DB), Q2 (recent work), Q3 (auth), Q4 (save CDN) in sequence — order matters for Q1-Q3 (each must be out-of-scope from prior answer). Q4b needs a fresh session. |
 | 5b — Read-back | Fresh Kiro session, `/agent` → checkout-memory | Start new session for Q4b (What CDN?) — do NOT ask in same session as Q4 save |
 | 6 — Kibana | None | Re-navigate from Agent Builder home — read-only |
-| Full retake | `python setup/demo-setup.py --reset` + clear Kiro chat | Restores all 67 docs; agent re-created |
+| Full retake | `python3 setup/demo-setup.py --reset` + clear Kiro chat | Restores all 67 docs; agent re-created |
 
 ---
 

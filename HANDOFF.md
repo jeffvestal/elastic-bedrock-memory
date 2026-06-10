@@ -1,6 +1,6 @@
 # Handoff: elastic-bedrock-memory Demo — AWS Summit NYC 2026
 
-**Date:** 2026-06-09
+**Date:** 2026-06-10
 **Talk:** From Stateless to Stateful: Architecting Agent Memory with Elastic and Bedrock
 **Event:** AWS Summit NYC, June 17, 2026
 **Repo:** github.com/jeffvestal/elastic-bedrock-memory (currently private — make public before June 17)
@@ -9,18 +9,22 @@
 
 ## Current State: What's Working
 
-The demo is functional end-to-end for the READ path. All three Scene 5 questions confirmed working in Kiro:
+### Read path — fully confirmed
 
 | Question | Tool Called | Status |
 |----------|-------------|--------|
-| "What database are we using and why?" | `search-knowledge-facts` | ✅ confirmed — Aurora PostgreSQL with ACID rationale |
-| "Catch me up on the last session" | `get-recent-conversations` + `list-sessions` + `search-knowledge-facts` | ✅ confirmed — sess-010 observability (CloudWatch, X-Ray, correlation IDs) |
-| "What auth approach — JWT or opaque tokens?" | `search-knowledge-facts` | ✅ confirmed — JWT, opaque tokens rejected, gateway-level validation |
+| "What database are we using and why?" | `search-knowledge-facts` | ✅ Aurora PostgreSQL with ACID rationale |
+| "Catch me up on the last session" | `get-recent-conversations` + `list-sessions` + `search-knowledge-facts` | ✅ sess-010 observability (CloudWatch, X-Ray, correlation IDs) |
+| "What auth approach — JWT or opaque tokens?" | `search-knowledge-facts` | ✅ JWT, opaque tokens rejected, gateway-level validation |
 
-Elastic Agent Builder agent has:
-- 4 tools (search-conversation-history, search-knowledge-facts, get-recent-conversations, list-sessions)
-- 1 Skill: `checkout-memory-retrieval` — a runbook attached to the agent (visible in Kibana Skills tab)
-- System instructions (always use memory tools first)
+### Write path — implemented, NOT yet live-tested through Kiro
+
+- `save-knowledge-fact` workflow tool is created in Agent Builder (tool id: `save-knowledge-fact`)
+- Backed by Elastic Workflow id `save-knowledge-fact-3` in Kibana
+- Workflow YAML: `elasticsearch.request` POST to `/knowledge-facts/_doc?refresh=wait_for`
+- Jina inference on write confirmed: `fact_semantic` populates when doc is written directly to ES ✅
+- Agent has **5 tools** (4 read + 1 write), `python3 setup/demo-setup.py` shows all green ✅
+- **One open risk:** Workflow was created with `valid: False` and `definition: null` in Kibana's API response — unknown if this blocks execution when triggered via Agent Builder tool call. Needs live Kiro test.
 
 ---
 
@@ -45,27 +49,29 @@ See full shot sheet: `demo_scripts/aws-summit-2026-navattic-shot-sheet.md`
 
 | Scene | What It Shows | Status |
 |-------|--------------|--------|
-| 1 | Architecture diagram (Kiro → Bedrock + Kiro → Agent Builder) | Static slide |
-| 2 | Kiro within-session memory (working memory) | No tools needed |
-| 3 | Kiro new session — amnesia, no memory tools | Run from `~/repos/checkout-service-demo/` |
-| 4 | Wire the memory: run `--add-mcp` script, show mcp.json before/after, Kiro Skill JSON, `/agent` picker | `--prep` to reset |
-| 5 | Kiro with memory — Q1 DB, Q2 recent work (3 tools), Q3 auth | ✅ all 3 confirmed working |
-| 6 | Kibana under the hood: agent config, tools, Skill, CALL agent via chat, Conversations log | Pre-record one Kibana chat session |
+| 1 | Architecture diagram | Static slide |
+| 2 | Kiro within-session memory | No tools needed |
+| 3 | Kiro new session — amnesia | Run from `~/repos/checkout-service-demo/` |
+| 4 | Wire the memory: `--add-mcp`, show mcp.json before/after, Kiro Skill, `/agent` picker | `--prep` to reset |
+| 5 | Kiro with memory — Q1 DB, Q2 recent work, Q3 auth, Q4 save CDN, Q4b read-back | Q1-Q3 ✅ confirmed; Q4/Q4b needs live test |
+| 6 | Kibana: agent config, tools, Skill, chat reads what Kiro wrote | Needs Q4 confirmed first |
 | 7 | Close / CTA slide | Static |
 
-### Scene 5 question order (order is load-bearing)
-Q1 must be DB (narrow — doesn't include auth), Q2 must be recent work (different tool), Q3 must be auth (not mentioned yet). If you ask "what stack?" first, auth appears in the response and Q3 won't fire a tool call.
-
-### Scene 6 important note
-Kiro calls MCP tools directly — those do NOT appear in Agent Builder's Conversations tab. The Conversations tab only shows calls via the Converse API (Kibana chat UI). Before recording Scene 6, open Kibana chat with `checkout-service-memory` and ask "What payment processor did we choose and why?" — this populates Conversations and validates the Skill is working.
+### Scene 5 question order (load-bearing for Q1-Q3)
+Q1 must be DB (narrow), Q2 must be recent work (different tool), Q3 must be auth (not mentioned yet).
+Q4 write beat: "We've decided to use Cloudflare CDN with a 5-minute TTL. Save this to memory."
+Q4b: fresh Kiro session → "What CDN are we using?" → should retrieve Cloudflare.
 
 ---
 
-## Setup / Reset Commands
+## Setup Commands (single entry point)
 
 ```bash
-# Full status check
+# Status check
 python3 setup/demo-setup.py
+
+# First-time setup (creates Elastic Workflow + Agent Builder agent with write tool)
+python3 setup/demo-setup.py --setup
 
 # Re-seed all data (run within 2 weeks of recording so timestamps look recent)
 python3 setup/demo-setup.py --reset
@@ -84,31 +90,31 @@ Kiro must be restarted after `--prep` and `--add-mcp`.
 
 ---
 
-## OPEN ISSUE: No Write Path (Critical Gap)
+## OPEN ISSUE: Verify Write Path End-to-End (MUST DO BEFORE RECORDING)
 
-**Problem:** The demo currently only shows READ from memory. Kiro sessions don't write anything back to Elasticsearch. The 67 seeded documents are pre-populated — there's no demonstration of memory actually being built up. This looks like a RAG demo, not a memory demo.
+**What to test:**
+1. In Kiro with checkout-memory agent active, say: "We've decided to use Cloudflare CDN with a 5-minute TTL for static assets. Save this to memory."
+2. Confirm `save-knowledge-fact` tool fires in Kiro's tool call output
+3. Run `python3 setup/demo-setup.py` — `knowledge-facts` count should be 18 (one new doc)
+4. Start a **new** Kiro session, ask: "What CDN are we using?"
+5. `search-knowledge-facts` should fire and return Cloudflare
 
-**What's needed:** A `save-knowledge-fact` tool that writes a new document to the `knowledge-facts` index, exposed via Agent Builder (and therefore via MCP to Kiro).
+**If the tool fires but no doc appears:** The Elastic Workflow has `valid: False` / `definition: null` — the workflow isn't executing. Fix path:
+- Option A: Recreate the workflow via Kibana UI, note the YAML it generates, use that as the template
+- Option B: Switch to the insurance sidecar (`mcp-sidecar/save-fact-server.py`) for Kiro-only write path; adjust Scene 6 to not show Agent Builder reading Kiro's write
 
-**What we know:**
-- Elastic Workflows support `elasticsearch.index` step to write documents to any index
-- Agent Builder supports a `workflow` tool type that triggers an Elastic Workflow
-- Workflow inputs are auto-detected from the YAML `inputs` block
-- Via MCP, Kiro gets this tool too — write path: Kiro → MCP → Agent Builder → Workflow → ES
+**If the tool doesn't fire at all:** Agent Builder isn't passing the workflow tool over MCP — check that `save-knowledge-fact` appears in Kiro's `/mcp list`.
 
-**What's NOT resolved:**
-- The exact Elastic Workflow YAML structure for an `inputs` block + `elasticsearch.index` step
-- Whether workflows can be created programmatically via REST API (vs Kibana UI only)
-- The exact Agent Builder API payload for a `workflow` type tool
-- The workflow_id format needed to reference a workflow in an Agent Builder tool
+---
 
-**Proposed demo flow once write is implemented:**
-1. Scene 5 new beat OR Scene 6 Kiro beat: "We've decided to use Cloudflare CDN, 5-minute TTL for static assets. Save this to memory."
-2. `save-knowledge-fact` tool fires → workflow runs → document written to `knowledge-facts`
-3. Follow-up (new Kiro session): "What CDN are we using?" → `search-knowledge-facts` → retrieves Cloudflare decision
-4. This proves memory isn't pre-seeded magic — it's whatever you tell it
+## Remaining Work Before June 17
 
-**Next step:** Open Kibana → Workflows, create a test workflow with an input and an `elasticsearch.index` step, note the workflow ID format and YAML structure. Then wrap it as an Agent Builder tool and test via Kiro.
+- [ ] **Live Kiro test of write beat** — verify save-knowledge-fact fires and doc reads back cross-session
+- [ ] Navattic recording (Jeff records, after write path verified)
+- [ ] Make GitHub repo public
+- [ ] Blog post: "Building Memory-as-a-Service for AI Agents with Elastic and Amazon Bedrock"
+- [ ] Uday sync — Bedrock creds for blog code examples
+- [ ] Rehearsal (60 min out loud, before June 15)
 
 ---
 
@@ -116,13 +122,15 @@ Kiro must be restarted after `--prep` and `--add-mcp`.
 
 | File | Purpose |
 |------|---------|
-| `setup/create-agent.py` | Creates Agent Builder agent, tools, Skill (idempotent) |
-| `setup/demo-setup.py` | Status check, reset, prep, add-mcp commands |
+| `setup/demo-setup.py` | Single entry point: status, --setup, --reset, --prep, --add-mcp, --nuclear |
+| `setup/validate-write-path.py` | Creates Elastic Workflow, tests Jina inference on write, writes WORKFLOW_ID to .env |
+| `setup/create-agent.py` | Creates Agent Builder agent, tools (read + write), Skill |
 | `setup/create-indices.py` | Creates 3 ES indices with Jina semantic_text |
 | `demo-data/seed.py` | Seeds 67 documents across 10 sessions |
+| `mcp-sidecar/save-fact-server.py` | Insurance: local MCP server write path (Kiro-only fallback if workflow fails) |
 | `kiro-config/checkout-memory-agent.json` | Kiro agent Skill template (copy to `~/.kiro/agents/`) |
 | `kiro-config/mcp-servers.json` | MCP server template (copy to `~/.kiro/settings/mcp.json`) |
-| `demo_scripts/aws-summit-2026-navattic-shot-sheet.md` | Scene-by-scene recording guide |
+| `demo_scripts/aws-summit-2026-navattic-shot-sheet.md` | Scene-by-scene recording guide (updated with Q4 write beat) |
 | `demo_scripts/aws-summit-2026-practice-guide.md` | 60-min stage practice script |
 
 ---
@@ -130,20 +138,11 @@ Kiro must be restarted after `--prep` and `--add-mcp`.
 ## Key Technical Decisions (don't reverse these)
 
 - **Jina embeddings, NOT ELSER** — `semantic_text` field uses `.jina-embeddings-v5-text-small`
+- **`fact_semantic` must be set explicitly on write** — it is NOT copied from `fact` automatically; both fields must be set to the same text value when indexing
 - **Basic auth for Kibana REST API** — ES-level API keys don't work against Kibana's REST layer
 - **`params: {}` required** on ES|QL tools in Agent Builder (even with no params)
 - **`Accept: application/json` required** on MCP calls or Agent Builder returns 406
-- **No DynamoDB mentions anywhere** — at AWS Summit, competing against AWS products is a bad look. PostgreSQL is framed positively (ACID, JOINs, Serverless v2), never "chosen over DynamoDB"
-- **Scene 5 question order is load-bearing** — narrow DB question first, then recent work, then auth. Broad "what stack?" question ruins Q3 tool call.
-- **Kiro MCP = tool calls only, not Converse API** — Kiro sessions don't appear in Agent Builder Conversations tab
-
----
-
-## Still To Do (before June 17)
-
-- [ ] **Write path** — create Elastic Workflow + `save-knowledge-fact` Agent Builder tool (see Open Issue above)
-- [ ] Navattic recording (Jeff records, after write path is resolved)
-- [ ] Make GitHub repo public
-- [ ] Blog post: "Building Memory-as-a-Service for AI Agents with Elastic and Amazon Bedrock"
-- [ ] Uday sync — Bedrock creds for blog code examples
-- [ ] Rehearsal (60 min out loud, before June 15)
+- **No DynamoDB mentions anywhere** — at AWS Summit, competing against AWS products is a bad look
+- **Scene 5 question order is load-bearing** — narrow DB question first, then recent work, then auth
+- **Kiro MCP = tool calls only, not Converse API** — Kiro sessions don't appear in Agent Builder Conversations tab; verify writes via ES doc count, not Conversations UI
+- **Elastic Workflow API payload:** `{"workflows": [{"yaml": "..."}]}` (array wrapper required); response shape: `{"created": [...], "failed": [...]}`

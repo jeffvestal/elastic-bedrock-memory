@@ -32,10 +32,10 @@ SESSIONS = [
         "summary": "Project kickoff — chose tech stack and database",
         "topics": ["database", "architecture", "stack-decision"],
         "exchanges": [
-            ("user", "We need to build a checkout service. What database should we use — DynamoDB or PostgreSQL?",
+            ("user", "We need to build a checkout service. Should we use a relational database or a NoSQL store?",
              ["database", "architecture"]),
             ("assistant",
-             "After analyzing your requirements — relational order data, ACID transactions for payments, complex queries for reporting — I recommend PostgreSQL. DynamoDB would require complex workarounds for the JOIN patterns you need in order history and reporting. Use RDS Aurora Serverless v2 for auto-scaling. Decision recorded.",
+             "For a checkout service, PostgreSQL is the right fit: ACID transactions ensure payment integrity, relational JOINs handle order history and reporting cleanly, and Aurora Serverless v2 auto-scales to match your traffic patterns without manual capacity management. Decision recorded.",
              ["database", "architecture"]),
             ("user", "Agreed. What ORM should we use?",
              ["orm", "stack-decision"]),
@@ -44,7 +44,7 @@ SESSIONS = [
              ["orm", "stack-decision"]),
         ],
         "facts": [
-            ("architecture", "Database: PostgreSQL (Aurora Serverless v2) — chosen over DynamoDB because checkout requires ACID transactions and complex JOINs for order history reporting", "critical"),
+            ("architecture", "Database: Aurora PostgreSQL (Serverless v2) — checkout requires ACID transactions for payment integrity, relational JOINs for order history and reporting. Aurora Serverless v2 handles traffic spikes without manual capacity management.", "critical"),
             ("architecture", "ORM: SQLAlchemy with asyncpg driver — async-first for FastAPI compatibility", "high"),
         ]
     },

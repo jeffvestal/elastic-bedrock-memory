@@ -43,24 +43,30 @@
 
 ---
 
-## Demo Script: 7 Scenes
+## Demo Structure: 5 Segments (~30 min live screen)
 
-See full shot sheet: `demo_scripts/aws-summit-2026-navattic-shot-sheet.md`
+Narrative spine: ONE task — **add a refund endpoint** — built wrong by an amnesiac Kiro (Act 1), then built right by a memory-wired Kiro (Act 2), with the memory system built live in between.
 
-| Scene | What It Shows | Status |
-|-------|--------------|--------|
-| 1 | Architecture diagram | Static slide |
-| 2 | Kiro within-session memory | No tools needed |
-| 3 | Kiro new session — amnesia | Run from `~/repos/checkout-service-demo/` |
-| 4 | Wire the memory: `--add-mcp`, show mcp.json before/after, Kiro Skill, `/agent` picker | `--prep` to reset |
-| 5 | Kiro with memory — Q1 DB, Q2 recent work, Q3 auth, Q4 save CDN, Q4b read-back | Q1-Q3 ✅ confirmed; Q4/Q4b needs live test |
-| 6 | Kibana: agent config, tools, Skill, chat reads what Kiro wrote | Needs Q4 confirmed first |
-| 7 | Close / CTA slide | Static |
+Full talk structure: Intro+amnesia hook (slides, 5m) → Seg 2 Act 1 (6m) → Seg 3 live-build (10m) → Seg 4 wire (3m) → Seg 5 Act 2 (7m) → Seg 6 Act 3 (4m) → FAQ slides (6m) → recap (4m) → CTA (3m) → Q&A.
 
-### Scene 5 question order (load-bearing for Q1-Q3)
-Q1 must be DB (narrow), Q2 must be recent work (different tool), Q3 must be auth (not mentioned yet).
-Q4 write beat: "We've decided to use Cloudflare CDN with a 5-minute TTL. Save this to memory."
-Q4b: fresh Kiro session → "What CDN are we using?" → should retrieve Cloudflare.
+See `demo_scripts/aws-summit-2026-demo-runbook.md` for exact prompts, target slips, live-build command sequence, state matrix, and reset procedures.
+
+| Segment | What It Shows | Status |
+|---------|--------------|--------|
+| 2 — Act 1 amnesia | Stock Kiro builds refunds **wrong**: float money, no idempotency key, no JWT, no double-refund guard. Developer corrects each. Breaking point: "every correction is something the team already decided." | Needs capture |
+| 3 — live-build | `create-indices.py` (semantic_text), `create-agent.py` (tools via API), `seed.py` (67 docs). Memory system built on stage in ~10 min. | Needs capture |
+| 4 — wire memory | `--add-mcp` (mcp.json before/after), Kiro Skill (`checkout-memory.json`), restart Kiro, `/agent` picker. | Needs capture |
+| 5 — Act 2 memory | SAME prompt. Kiro calls `search-knowledge-facts` first, writes correct code citing sessions. New decision (90-day refund window, partial cap) saved via `save-knowledge-fact`. | Needs write-path verified |
+| 6 — Act 3 | Fresh session / "teammate" reads back the saved refund policy. Kibana Conversations shows audit trail. | Needs Act 2 captured first |
+
+### State matrix (what must be true at each segment)
+| Segment | Elastic memory | Kiro agent | mcp.json | checkout-service-demo |
+|---------|----------------|-----------|----------|-----------------------|
+| 2 Act 1 | not wired | **stock** | no elastic-memory | baseline |
+| 3 live-build | building on camera | n/a | n/a | n/a |
+| 4 wire | populated | switching to checkout-memory | **adding** elastic-memory | baseline |
+| 5 Act 2 | populated | **checkout-memory** | elastic-memory present | baseline (reset after Act 1) |
+| 6 Act 3 | populated + 1 saved fact | checkout-memory | present | n/a |
 
 ---
 
@@ -110,11 +116,13 @@ Kiro must be restarted after `--prep` and `--add-mcp`.
 ## Remaining Work Before June 17
 
 - [ ] **Live Kiro test of write beat** — verify save-knowledge-fact fires and doc reads back cross-session
-- [ ] Navattic recording (Jeff records, after write path verified)
+- [ ] Navattic recording (Jeff records, following the new run-book — `demo_scripts/aws-summit-2026-demo-runbook.md`)
 - [ ] Make GitHub repo public
 - [ ] Blog post: "Building Memory-as-a-Service for AI Agents with Elastic and Amazon Bedrock"
 - [ ] Uday sync — Bedrock creds for blog code examples
 - [ ] Rehearsal (60 min out loud, before June 15)
+- [x] Deck reshaped to 22 slides on a work copy (id `151FhokgExhlNBw1FuqPwyYVWVvlyKHfAJVBUiYUYUK4`) — original untouched
+- [x] HANDOFF.md and CLAUDE.md updated to reflect redesigned demo
 
 ---
 
@@ -130,8 +138,13 @@ Kiro must be restarted after `--prep` and `--add-mcp`.
 | `mcp-sidecar/save-fact-server.py` | Insurance: local MCP server write path (Kiro-only fallback if workflow fails) |
 | `kiro-config/checkout-memory-agent.json` | Kiro agent Skill template (copy to `~/.kiro/agents/`) |
 | `kiro-config/mcp-servers.json` | MCP server template (copy to `~/.kiro/settings/mcp.json`) |
-| `demo_scripts/aws-summit-2026-navattic-shot-sheet.md` | Scene-by-scene recording guide (updated with Q4 write beat) |
+| `demo_scripts/aws-summit-2026-demo-runbook.md` | **THE capture run-book** — exact prompts, target slips, live-build commands, state matrix, reset procedures |
+| `demo_scripts/aws-summit-2026-faq.md` | FAQ-as-content (6 questions, 6-min FAQ segment) |
+| `demo_scripts/aws-summit-2026-navattic-shot-sheet.md` | Recording guide (follows the new run-book) |
 | `demo_scripts/aws-summit-2026-practice-guide.md` | 60-min stage practice script |
+| `demo_scripts/reference/refunds-correct.py` | Reference: correct refund implementation (Act 2 target) |
+| `demo_scripts/reference/refunds-amnesiac.py` | Reference: wrong refund implementation (Act 1 anti-pattern) |
+| `~/repos/checkout-service-demo` | **Separate repo** — real FastAPI checkout codebase with a refund-shaped hole; baseline committed for `git checkout .` resets |
 
 ---
 
@@ -143,6 +156,5 @@ Kiro must be restarted after `--prep` and `--add-mcp`.
 - **`params: {}` required** on ES|QL tools in Agent Builder (even with no params)
 - **`Accept: application/json` required** on MCP calls or Agent Builder returns 406
 - **No DynamoDB mentions anywhere** — at AWS Summit, competing against AWS products is a bad look
-- **Scene 5 question order is load-bearing** — narrow DB question first, then recent work, then auth
 - **Kiro MCP = tool calls only, not Converse API** — Kiro sessions don't appear in Agent Builder Conversations tab; verify writes via ES doc count, not Conversations UI
 - **Elastic Workflow API payload:** `{"workflows": [{"yaml": "..."}]}` (array wrapper required); response shape: `{"created": [...], "failed": [...]}`

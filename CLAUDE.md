@@ -14,12 +14,16 @@
 | Elastic Cloud project `bedrock-memory-demo` (aws-us-east-1) | ✅ live | cloud.elastic.co |
 | 3 ES indices with Jina v5 `semantic_text` | ✅ live | conversation-history, knowledge-facts, session-metadata |
 | 67 seeded docs (10 checkout service dev sessions) | ✅ live | `demo-data/seed.py` |
-| Agent Builder agent + 4 MCP tools | ✅ live | Kibana → Agent Builder |
+| Agent Builder agent + 5 MCP tools (4 read + 1 write) | ✅ live | Kibana → Agent Builder |
 | Kiro MCP wired globally | ✅ | `~/.kiro/settings/mcp.json` |
 | Kiro agent config (Skill) | ✅ | `kiro-config/checkout-memory-agent.json` |
-| Semantic search verified end-to-end | ✅ | "which DB did we choose?" → correct answer |
+| Semantic search verified end-to-end | ✅ | refund decisions retrieved correctly |
+| Checkout service demo codebase | ✅ | `~/repos/checkout-service-demo` (separate repo) |
 | GitHub repo (private) | ✅ | github.com/jeffvestal/elastic-bedrock-memory |
-| Slide deck (26 slides, Google Slides) | ✅ | see kuchi-kopi project file for link |
+| Slide deck (22 slides, work copy) | ✅ | id `151FhokgExhlNBw1FuqPwyYVWVvlyKHfAJVBUiYUYUK4` |
+| Demo run-book | ✅ | `demo_scripts/aws-summit-2026-demo-runbook.md` |
+| FAQ-as-content script | ✅ | `demo_scripts/aws-summit-2026-faq.md` |
+| Reference refund implementations | ✅ | `demo_scripts/reference/refunds-correct.py`, `refunds-amnesiac.py` |
 | Navattic shot sheet | ✅ | `demo_scripts/aws-summit-2026-navattic-shot-sheet.md` |
 | Practice guide (60 min stage script) | ✅ | `demo_scripts/aws-summit-2026-practice-guide.md` |
 
@@ -43,7 +47,7 @@ Live in `/Users/jeffvestal/repos/elastic-bedrock-memory/.env` (gitignored).
 
 ### Kibana / Agent Builder
 - Agent: `checkout-service-memory`
-- 4 tools: `search-conversation-history`, `search-knowledge-facts`, `get-recent-conversations`, `list-sessions`
+- 5 tools: `search-conversation-history`, `search-knowledge-facts`, `get-recent-conversations`, `list-sessions`, `save-knowledge-fact` (write)
 - MCP endpoint: `{KIBANA_URL}/api/agent_builder/mcp`
 - Required headers: `Authorization: Basic ...`, `kbn-xsrf: true`, `Accept: application/json`
 
@@ -60,6 +64,7 @@ Live in `/Users/jeffvestal/repos/elastic-bedrock-memory/.env` (gitignored).
 - **Basic auth for Kibana REST API** — ES-level API keys don't authenticate against Kibana's REST layer; use `KIBANA_USER`/`KIBANA_PASSWORD` in setup scripts
 - **`params: {}` required** — ES|QL tools in Agent Builder need explicit empty params object even with no params
 - **`Accept: application/json` required** — MCP calls to Agent Builder 406 without it
+- **No DynamoDB mentions anywhere** — at AWS Summit, competing against AWS products is a bad look
 
 ---
 
@@ -68,32 +73,53 @@ Live in `/Users/jeffvestal/repos/elastic-bedrock-memory/.env` (gitignored).
 ```
 setup/
   create-indices.py    # Creates 3 ES indices with Jina semantic_text
-  create-agent.py      # Creates Agent Builder agent + 4 tools (idempotent)
+  create-agent.py      # Creates Agent Builder agent + 5 tools (4 read + 1 write, idempotent)
 demo-data/
   seed.py              # Seeds 67 docs across 10 checkout service sessions
 kiro-config/
   mcp-servers.json              # Template Kiro MCP config (placeholder values)
   checkout-memory-agent.json    # Kiro agent config / Skill (copy to ~/.kiro/agents/)
 demo_scripts/
+  aws-summit-2026-demo-runbook.md          # THE capture run-book (exact prompts, slips, resets)
+  aws-summit-2026-faq.md                   # FAQ-as-content (6 questions, 6-min segment)
   aws-summit-2026-navattic-shot-sheet.md   # Click-by-click Navattic recording guide
   aws-summit-2026-practice-guide.md        # 60-min stage practice script
+  reference/
+    refunds-correct.py    # Act 2 target: correct refund impl (int cents, idempotency, JWT)
+    refunds-amnesiac.py   # Act 1 anti-pattern: wrong version Kiro writes without memory
 docs/                  # Architecture diagrams (TBD)
+
+# Separate codebase (NOT in this repo):
+~/repos/checkout-service-demo   # Real FastAPI checkout service; baseline committed for
+                                 # git checkout . resets between takes
 ```
 
 ---
 
 ## Demo Scenario
 
-Developer building a checkout service over 10 sessions (~2 weeks). Seeded data includes:
-- DB choice: Aurora PostgreSQL — ACID transactions for payment integrity, relational JOINs for reporting
-- Auth: JWT (15 min) + refresh tokens; opaque tokens rejected (introspection latency per request)
-- Payment: Stripe (Braintree considered, eliminated — SDK quality and webhook reliability)
-- Recent work (session 10): Observability setup — structured JSON logs to CloudWatch, X-Ray tracing, correlation IDs
+The demo is a ~30-min live narrative built around ONE coding task: **add a refund endpoint** to a real FastAPI checkout service (`~/repos/checkout-service-demo`). The seeded 10 sessions (~2 weeks of history) contain the decisions that make the demo land:
 
-Demo questions that work:
-- "Which database did we choose and why?" → `search-knowledge-facts` → Aurora PostgreSQL (session 1)
-- "What auth approach did we decide on? JWT or opaque tokens?" → `search-knowledge-facts` → JWT, opaque tokens rejected
-- "What did we work on in the last session?" → `get-recent-conversations` → CloudWatch/X-Ray observability
+- Money = integer cents (sess-005) — float math caused a real production bug
+- JWT auth on every route (sess-002) — opaque tokens rejected for introspection latency
+- Stripe idempotency key on every charge (sess-004/007) — retry = double-charge without it
+- Aurora PostgreSQL (sess-001) — ACID transactions for payment integrity
+- Recent work (sess-010) — CloudWatch/X-Ray observability
+
+**Act 1 (amnesiac Kiro, ~6 min):** Stock Kiro builds the refund endpoint wrong — reintroduces the float-money bug, skips the Stripe idempotency key, skips JWT auth, skips a double-refund guard. Developer corrects each by hand. Breaking point: "every one of those corrections is something my team already decided."
+
+**Live-build (~10 min):** On stage: `create-indices.py` (shows semantic_text mapping), `create-agent.py` (tools via REST API), `seed.py` (loads 2 weeks of history). Full memory system built in ~10 min.
+
+**Wire (~3 min):** `--add-mcp` adds the elastic-memory block to mcp.json. Open `checkout-memory.json` Skill. Restart Kiro, `/agent` → checkout-memory.
+
+**Act 2 (memory-wired Kiro, ~7 min):** SAME verbatim prompt. Kiro calls `search-knowledge-facts` first, writes the refund endpoint **correctly, first pass**, citing the sessions. New decision (90-day refund window, partial-refund cap) is then saved via `save-knowledge-fact`.
+
+**Act 3 (~4 min):** Fresh session / "teammate" reads back the saved refund policy via `search-knowledge-facts`. Kibana Conversations tab shows the audit trail.
+
+### Demo questions that work (Act 2 + Act 3)
+- Verbatim refund prompt → Kiro calls `search-knowledge-facts` before writing any code
+- `search-knowledge-facts` retrieves: integer cents, Stripe idempotency, JWT, Aurora rationale
+- "What's our refund policy?" (new session) → `search-knowledge-facts` → 90-day / partial-cap fact saved in Act 2
 
 ---
 

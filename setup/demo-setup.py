@@ -58,7 +58,7 @@ TOOL_IDS = [
 ]
 EXPECTED_DOCS = {
     "conversation-history": 40,
-    "knowledge-facts": 17,
+    "knowledge-facts": 18,
     "session-metadata": 10,
 }
 
@@ -361,6 +361,40 @@ def print_checklist():
     print()
 
 
+def clean():
+    """Empty Elastic so the live-build segment (Segment 3) shows real creation on
+    camera: delete the 3 indices + the agent, tools, and skill. Leaves the
+    save-knowledge-fact workflow intact (create-agent reuses WORKFLOW_ID)."""
+    print("\n=== Clean: empty Elastic for the live-build capture ===\n")
+    es = es_client()
+    for name in EXPECTED_DOCS:
+        if es.indices.exists(index=name):
+            es.indices.delete(index=name)
+            print(f"  index deleted: {name}")
+        else:
+            print(f"  index absent:  {name}")
+    kb = kibana_session()
+    base = os.environ["KIBANA_URL"].rstrip("/")
+
+    def _del(path, label):
+        try:
+            r = kb.delete(f"{base}/api/agent_builder/{path}")
+            status = "deleted" if r.status_code in (200, 204) else f"{r.status_code} (skip)"
+            print(f"  {status}: {label}")
+        except Exception as e:
+            print(f"  error deleting {label}: {e}")
+
+    _del(f"agents/{AGENT_ID}", f"agent {AGENT_ID}")
+    for tid in TOOL_IDS:
+        _del(f"tools/{tid}", f"tool {tid}")
+    _del("skills/checkout-memory-retrieval", "skill checkout-memory-retrieval")
+    print("\n  Elastic is empty. Now record Segment 3 on camera:")
+    print("    python3 setup/create-indices.py   # shows indices CREATED (semantic_text)")
+    print("    python3 setup/create-agent.py      # shows agent + 5 tools created")
+    print("    python3 demo-data/seed.py          # loads 67 docs")
+    print()
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -372,16 +406,20 @@ if __name__ == "__main__":
     parser.add_argument("--nuclear", action="store_true", help="Delete + recreate indices + full rebuild")
     parser.add_argument("--prep", action="store_true", help="Remove elastic-memory from mcp.json (pre-recording state for Scenes 2-3)")
     parser.add_argument("--add-mcp", action="store_true", help="Add elastic-memory to mcp.json (post-Scene-3 state)")
+    parser.add_argument("--clean", action="store_true", help="Empty Elastic (delete indices + agent/tools/skill) for the live-build capture; keeps the workflow")
     args = parser.parse_args()
 
     if args.setup:
         run_setup()
+    if args.clean:
+        clean()
     if args.reset or args.nuclear:
         reset(nuclear=args.nuclear)
     if args.prep:
-        print("\n=== Prep: pre-recording state ===\n")
+        print("\n=== Prep: pre-recording state (Act 1 / amnesia) ===\n")
         mcp_remove_elastic()
-        ensure_checkout_demo_dir()
+        print("  Reset the checkout-service-demo codebase to baseline:")
+        print(f"    git -C {CHECKOUT_DEMO_DIR} checkout .")
         print()
     if args.add_mcp:
         print("\n=== Adding elastic-memory to mcp.json ===\n")

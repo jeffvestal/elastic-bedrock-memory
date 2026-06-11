@@ -5,7 +5,7 @@ status: pre-recording
 category: content
 priority: high
 created: 2026-06-02
-updated: 2026-06-10
+updated: 2026-06-11
 tags: [aws-summit-2026, navattic, demo, elastic-bedrock-memory, shot-sheet]
 ---
 
@@ -17,7 +17,7 @@ tags: [aws-summit-2026, navattic, demo, elastic-bedrock-memory, shot-sheet]
 **Total shots:** ~35 steps across 8 scenes
 **Demo runtime:** ~12 minutes in Navattic
 
-**Narrative spine:** One task — *add a refund endpoint* — built **wrong** without memory (Act 1), the memory system **built live** in front of the audience, **wired** to Kiro, then the same task built **right** with memory (Act 2). Cross-session read-back and Kibana audit trail close it out.
+**Narrative spine:** One task — *add a refund endpoint* — built **clean but policy-blind** without memory (Act 1), the memory system **built live** in front of the audience, **wired** to Kiro, then the same task built **right** with memory (Act 2). Cross-session read-back and Kibana audit trail close it out.
 
 ### Kibana (Agent Builder):
 https://bedrock-memory-demo-e86908.kb.us-east-1.aws.elastic.cloud
@@ -33,12 +33,11 @@ Follow the state matrix in the run-book exactly. Abbreviated here for reference:
 
 ```bash
 cd ~/repos/elastic-bedrock-memory
-
-# One-time baseline — clean project, re-seeds on next Segment 3 capture
-python3 setup/demo-setup.py --nuclear
-
-# Reset codebase to baseline before Act 1 AND Act 2 captures
-git -C ~/repos/checkout-service-demo checkout .
+# Per-phase state — see run-book "Recording flow" section:
+#   Act 1:        python3 setup/demo-setup.py --prep      (+ stock agent)
+#   Live-build:   python3 setup/demo-setup.py --clean     (empty Elastic for the capture)
+#   Wire+Act2/3:  python3 setup/demo-setup.py --add-mcp   (+ checkout-memory agent)
+git -C ~/repos/checkout-service-demo checkout .           # codebase baseline (before Act 1 and Act 2)
 ```
 
 See run-book **State matrix** section for what must be true per segment before pressing record. Record in story order when possible — Act 2 requires codebase reset to baseline after Act 1.
@@ -71,30 +70,38 @@ See run-book **State matrix** section for what must be true per segment before p
 
 ---
 
-## Scene 2 — Act 1: Amnesia (refunds, built wrong) · ~6 min
+## Scene 2 — Act 1: Amnesia (refunds, clean code — policy-blind) · ~6 min
 
-**Purpose:** Show what an amnesiac Kiro builds when it has no access to the team's decision history.
+**Purpose:** Show that a capable Kiro reads the repo and gets code patterns right — but is completely blind to the team's refund policy, which lives only in memory.
 **State:** Stock Kiro agent. `elastic-memory` NOT in mcp.json. Codebase at baseline (`git checkout .`). Launched from `~/repos/checkout-service-demo/`.
-**Note:** See run-book "Target slips" and "Eliciting the slips" for live elicitation guidance. Need ~3 of 4 slips to land the point. Verify take against `demo_scripts/reference/refunds-amnesiac.py`.
+**Note:** Don't wait for Kiro to write buggy code — it won't. The gaps are policy gaps, not code-quality gaps. Verify take against `demo_scripts/reference/refunds-amnesiac.py`.
+
+### What Kiro gets right vs. the gaps
+
+| ✅ Gets right — reads from the repo | ❌ Missing — lives only in team memory |
+|---|---|
+| Integer cents (`dollars_to_cents`) | No amount cap → can refund more than the order, repeatedly |
+| Stripe idempotency + `_with_backoff` | No 90-day window — no time check at all |
+| JWT + ownership (`get_current_user`) | Amount-based idempotency key (`{order_id}-refund-{amount_cents}`) → two equal partial refunds collide; Stripe silently drops the 2nd |
+| Refund model, async session | (states the key choice confidently in a comment — wrong, but sure of itself) |
 
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
 | 1 | (Optional) Kiro chat — type: `I'm back on the checkout service. We're adding refunds today.` Kiro acknowledges. | ✅ Cap 2a | compress | Hotspot: "Kiro remembers what you tell it in this session. Working memory — fine. Watch what it doesn't have." |
 | 2 | The ask (verbatim): `I need to add refunds to the checkout service. Add a POST endpoint that lets a customer request a refund on an order — support partial refunds where they can pass a dollar amount to refund. Wire it up to Stripe.` | ✅ Cap 2b | compress | Hotspot on prompt: "Same prompt used in Act 2 — word for word. Only one thing changes." |
-| 3 | Kiro streams wrong code — float dollar input and/or float math in refund amount | ✅ Cap 2c | compress | Hotspot on float variable: "Float. Our team already paid for this exact mistake with a production 1-cent rounding bug." |
-| 4 | Jeff types correction 1: `Hold on — we store money as integer cents, never floats. We had a 1-cent rounding bug from exactly this kind of math two weeks ago. Use the money helpers.` Kiro fixes. | ✅ Cap 2d | real-time | Hotspot on correction: "Correction 1. Kiro fixes it — because you remembered." |
-| 5 | Jeff types correction 2: `That Stripe refund needs an idempotency key like our charge path does, or a retry double-refunds the customer.` Kiro fixes. | ✅ Cap 2e | real-time | Hotspot on correction: "Correction 2. The idempotency pattern. Already in our history — not in Kiro's context." |
-| 6 | Jeff types correction 3: `This route isn't authenticated — every other route uses get_current_user.` Kiro fixes. | ✅ Cap 2f | real-time | Hotspot on correction: "Correction 3. JWT on every route. Our convention. Kiro had to be told." |
-| 7 | (If applicable) Jeff types correction 4: `And guard against double refunds and refunding more than the order total.` Kiro fixes. | ✅ Cap 2g | real-time | Hotspot on correction: "Correction 4. The idempotency ledger. Another thing the team already decided." |
-| 8 | Hold on final hand-corrected diff — all four slips visible as corrections | ✅ Cap 2h | real-time | Hotspot on diff: "Everything fixed — by you. Because you remembered what Kiro couldn't." |
-| 9 | Breaking point (Jeff to the room): "Every one of those corrections is something my team already decided. The cents rule — we paid for that with a production bug. The idempotency pattern, the auth convention. It's written down in past sessions, it's in my head, it's in a teammate's brain. Kiro had none of it. And tomorrow, new session, I do this all over again. That's the amnesia tax — every session, every teammate, forever." | ✅ Cap 2i | real-time | No hotspot — let it land. |
+| 3 | Kiro streams clean code — integer cents, Stripe idempotency + backoff, JWT, Refund model. Amount-based idempotency key (`{order_id}-refund-{amount_cents}`) visible with a confident comment. No cap, no time window. | ✅ Cap 2c | compress | Hotspot on code: "Clean code — it read the repo. But look at the idempotency key. And no cap. No time window." |
+| 4 | Jeff types correction 1: `This lets me refund more than the order was — and as many times as I want. Our policy is partial refunds capped at the original charge minus anything already refunded.` Kiro fixes. | ✅ Cap 2d | real-time | Hotspot on correction: "Correction 1. The cap. Our policy — not in the code anywhere. Only in memory." |
+| 5 | Jeff types correction 2: `And there's no time limit. We only allow refunds within 90 days; older ones go to manager approval — return a 422.` Kiro fixes. | ✅ Cap 2e | real-time | Hotspot on correction: "Correction 2. The 90-day window. Another decision that lives in past sessions, not in the codebase." |
+| 6 | Jeff types correction 3: `That idempotency key is order-id plus amount — two $10 refunds on one order would collide and the second silently wouldn't go through. Keys have to be per-attempt.` Kiro fixes. | ✅ Cap 2f | real-time | Hotspot on correction: "Correction 3. The idempotency bug — it stated this confidently in a comment. Wrong, but sure of itself." |
+| 7 | Hold on the corrected diff — all three policy corrections visible | ✅ Cap 2g | real-time | Hotspot on diff: "Every correction fed from memory. Kiro wrote the code. You knew the policy." |
+| 8 | Breaking point (Jeff to the room): "Look at what happened. Kiro wrote clean code — cents, idempotency, auth — because it could read the codebase. But it had no idea about our refund policy: it'd refund more than you paid, with no time limit. And it shipped an idempotency bug we'd catch in review. None of that is in the code — it's in decisions my team made, in past sessions, in my head. Kiro couldn't see any of it. New session tomorrow? Same blind spots, again." | ✅ Cap 2h | real-time | No hotspot — let it land. |
 
 ---
 
 ## Scene 3 — Live-build the memory system · ~10 min
 
 **Purpose:** Build the complete memory system on camera. Audience sees it isn't magic — it's three scripts.
-**State:** Freshly reset Elastic project (`--nuclear` run before this take). Terminal + browser (Kibana). Launched from `~/repos/elastic-bedrock-memory/`.
+**State:** Empty Elastic project (`--clean` run before this take). Terminal + browser (Kibana). Launched from `~/repos/elastic-bedrock-memory/`.
 
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
@@ -123,7 +130,7 @@ See run-book **State matrix** section for what must be true per segment before p
 
 ## Scene 5 — Act 2: Memory (refunds, built right) · ~7 min
 
-**Purpose:** Same prompt, memory-wired Kiro, correct output first pass with citations. Side-by-side contrast. Write beat.
+**Purpose:** Same prompt, memory-wired Kiro recalls the refund POLICY first pass with citation. Side-by-side contrast. Write beat turns Act 1's idempotency bug into team memory.
 **State:** checkout-memory agent active, elastic-memory wired, fresh Kiro session, codebase **reset to baseline** (`git checkout .`). Launched from `~/repos/checkout-service-demo/`.
 
 ### The ask (VERBATIM SAME as Act 1)
@@ -131,37 +138,37 @@ See run-book **State matrix** section for what must be true per segment before p
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
 | 1 | Kiro chat — type the IDENTICAL prompt: `I need to add refunds to the checkout service. Add a POST endpoint that lets a customer request a refund on an order — support partial refunds where they can pass a dollar amount to refund. Wire it up to Stripe.` | ✅ Cap 5a | compress | Hotspot on prompt: "Same prompt. Word for word. The only thing that changed is memory." |
-| 2 | **MONEY SHOT** — `search-knowledge-facts` tool call fires BEFORE any code is written. nlQuery visible (something like: "money handling, payments, Stripe, refund decisions"). | ✅ Cap 5b | real-time | Hotspot on tool call: "Before writing a single line — Kiro checks memory. The Skill kicked in." |
-| 3 | Retrieved facts visible — integer cents (sess-005), Stripe idempotency (sess-004), retry/backoff (sess-007), JWT auth (sess-002) | ✅ Cap 5c | real-time | Hotspot on results: "Four decisions retrieved. The house rules — from the sessions that established them." |
-| 4 | Kiro writes correct code, first pass — integer cents, idempotency key, `get_current_user` dependency, double-refund guard. Citations visible: "Based on the decision in session 5… matching the idempotency pattern from session 4…" | ✅ Cap 5d | real-time | Hotspot on citations: "It cites its sources. Not training data — your team's sessions." Hotspot on correct code: "No float. Idempotency key. Auth. Guard. Correct, first pass." |
+| 2 | **MONEY SHOT** — `search-knowledge-facts` tool call fires BEFORE any code is written. nlQuery visible (something like: "refund policy, refund rules, payment decisions"). | ✅ Cap 5b | real-time | Hotspot on tool call: "Before writing a single line — Kiro checks memory. The Skill kicked in." |
+| 3 | Retrieved facts visible — **refund policy** (partial cap + 90-day window, sess-004) alongside payment patterns (cents, Stripe idempotency, JWT) | ✅ Cap 5c | real-time | Hotspot on refund policy result: "There it is. Partial cap, 90-day window — decided in session 4. Never written in code. Retrieved from memory." |
+| 4 | Kiro writes correct code, first pass — policy baked in: cap at original minus prior refunds, 90-day window enforced (422 otherwise), per-attempt idempotency key. Citation visible: "Per the refund policy from session 4…" | ✅ Cap 5d | real-time | Hotspot on citations: "It cites its sources. Not training data — your team's sessions." Hotspot on cap + window: "Capped. Windowed. The policy Act 1 never knew about." |
 
 ### Side-by-side contrast
 
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
-| 5 | **Side-by-side** — Act 1's hand-corrected mess (Screen 1) next to Act 2's correct-first-pass output (Screen 2). Same prompt. | ✅ Cap 5e | real-time | Hotspot spanning both screens: "Left: four corrections, one by one. Right: correct, unprompted. Same prompt. Same Kiro. Different memory." |
+| 5 | **Side-by-side** — Act 1 (over-refunds, no window, amount-keyed idempotency) on Screen 1 next to Act 2 (capped, windowed, cites session 4) on Screen 2. Same prompt. | ✅ Cap 5e | real-time | Hotspot spanning both screens: "Left: over-refunds, no time limit, amount-based key. Right: capped, windowed, cites the decision. Same prompt. Same Kiro. Different memory." |
 
-### Go deeper — backoff and new policy
+### Write beat — turn Act 1's bug into team memory
 
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
 | 6 | (If Kiro applied retry/backoff unprompted) Call it out: "Notice it applied the retry-with-backoff from our charge path to the refund call — I never asked." | ✅ Cap 5f | real-time | Hotspot: "Pattern-matched our own conventions. Never asked. Memory carries the reasoning, not just the decisions." |
-| 7 | Jeff types: `Now enforce the refund rules: partial refunds up to the original charge minus any prior refunds, and only within 90 days of the order. Then save that policy to memory.` | ✅ Cap 5g | compress | Hotspot on prompt: "A new decision — doesn't exist anywhere yet. Not in code, not in memory." |
-| 8 | `save-knowledge-fact` tool call fires — inputs expanded: fact text, category, project, importance | ✅ Cap 5h | real-time | Hotspot on tool call: "save-knowledge-fact — Kiro calls Agent Builder, Agent Builder triggers an Elastic Workflow, Workflow writes to Elasticsearch." |
-| 9 | Kiro confirms save | ✅ Cap 5i | compress | Hotspot on confirmation: "That decision is now in Elasticsearch. Kiro just wrote to the team's memory." |
+| 7 | Jeff types: `One more thing — the refund idempotency key can't be amount-based; two equal partial refunds would collide. Use a per-attempt UUID (refund-{uuid}). Save that as a decision so we never repeat it.` | ✅ Cap 5g | compress | Hotspot on prompt: "Act 1 shipped that bug. Now we're turning the fix into team memory." |
+| 8 | `save-knowledge-fact` tool call fires — inputs expanded: fact text (per-attempt UUID rule), category, project, importance | ✅ Cap 5h | real-time | Hotspot on tool call: "save-knowledge-fact — Kiro calls Agent Builder, Agent Builder triggers an Elastic Workflow, Workflow writes to Elasticsearch." |
+| 9 | Kiro confirms save | ✅ Cap 5i | compress | Hotspot on confirmation: "That bug the amnesiac version shipped? Fixed — and now in team memory. Next session, nobody repeats it." |
 
 ---
 
 ## Scene 6 — Act 3: Cross-session read-back · ~2 min
 
-**Purpose:** New session, different developer framing — the saved fact is immediately retrievable.
-**State:** Post-Act-2 (90-day/partial-cap fact saved). Fresh Kiro session — do NOT reuse Act 2 session. checkout-memory agent.
+**Purpose:** New session, teammate framing — the idempotency-key rule saved in Act 2 is immediately retrievable. Proves the write→read loop.
+**State:** Post-Act-2 (per-attempt-UUID idempotency rule saved). Fresh Kiro session — do NOT reuse Act 2 session. checkout-memory agent.
 
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
-| 1 | New Kiro session — frame it: "Now I'm a teammate. Brand new context." Type: `What's our refund policy — can customers get partial refunds, and is there a time limit?` | ✅ Cap 6a | compress | Hotspot on prompt: "Brand new session. A decision made minutes ago by a different developer." |
-| 2 | `search-knowledge-facts` fires → returns 90-day / partial-cap fact saved in Act 2 | ✅ Cap 6b | real-time | Hotspot on tool call: "Same tool. Different session. Different developer. Same memory." |
-| 3 | Response: 90-day window, partial refunds up to original charge minus prior refunds — exact policy from Act 2 | ✅ Cap 6c | real-time | Hotspot on answer: "Retrieved instantly. The memory isn't on your laptop. It's in Elasticsearch — cross-session, cross-machine, cross-team." |
+| 1 | New Kiro session — frame it: "Now I'm a teammate. Brand new context, about to add another Stripe write." Type: `What's our convention for idempotency keys on refunds?` | ✅ Cap 6a | compress | Hotspot on prompt: "Brand new session. A bug fixed minutes ago by a different developer." |
+| 2 | `search-knowledge-facts` fires → returns the per-attempt-UUID rule saved in Act 2 | ✅ Cap 6b | real-time | Hotspot on tool call: "Same tool. Different session. Different developer. Same memory." |
+| 3 | Response: per-attempt UUID (`refund-{uuid}`), never amount-based — exact rule from Act 2's write beat | ✅ Cap 6c | real-time | Hotspot on answer: "Retrieved instantly. A bug fixed in Act 2 is now team memory. Cross-session, cross-machine, cross-team." |
 
 ---
 
@@ -195,11 +202,11 @@ See run-book **Reset procedures between takes** for exact commands. Summary:
 
 | Scene | Reset | Note |
 |-------|-------|------|
-| 2 — Act 1 | `git -C ~/repos/checkout-service-demo checkout .`; fresh stock Kiro session | Verify slips against `demo_scripts/reference/refunds-amnesiac.py` |
-| 3 — Live-build | `python3 setup/demo-setup.py --nuclear` | Clean project — scripts must show *creation*, not "already exists" |
+| 2 — Act 1 | `git -C ~/repos/checkout-service-demo checkout .`; fresh stock Kiro session | Verify policy gaps (no cap, no window, amount-based key) against `demo_scripts/reference/refunds-amnesiac.py` |
+| 3 — Live-build | `python3 setup/demo-setup.py --clean` | Empty Elastic — scripts must show *creation*, not "already exists" |
 | 4 — Wire memory | `python3 setup/demo-setup.py --prep`, restart Kiro | Removes elastic-memory from mcp.json |
 | 5 — Act 2 | `git checkout .` in codebase; `--reset` if stray fact saved; fresh session | Must be baseline — refunds must not already exist from Act 1 |
-| 6 — Act 3 read-back | Fresh Kiro session | Do NOT reuse the Act 2 session |
+| 6 — Act 3 read-back | Fresh Kiro session | Do NOT reuse the Act 2 session. Per-attempt-UUID rule must be saved from Act 2. |
 | 7 — Kibana | None | Re-navigate from Agent Builder home — read-only |
 | Full retake | `python3 setup/demo-setup.py --reset` + `git checkout .` in codebase | Restores 67 docs, agent re-created |
 

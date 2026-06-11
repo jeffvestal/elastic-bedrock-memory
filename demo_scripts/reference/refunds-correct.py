@@ -1,17 +1,18 @@
 """
-REFERENCE — the CORRECT refund implementation (Act 2 target / paste-in fallback).
+REFERENCE — the CORRECT, policy-aware refund implementation (Act 2 target / fallback).
 
-This is what a memory-wired Kiro should produce after calling search-knowledge-facts.
-It is NOT committed to checkout-service-demo (that repo stays in the "before" state).
-Each block is annotated with the file it belongs in and the decision it honors.
+A memory-wired Kiro produces this after calling search-knowledge-facts. NOTE: a no-memory
+Kiro also gets the *code patterns* right by reading the repo (cents, idempotency, JWT) —
+see refunds-amnesiac.py. The real difference is the two policy rules and the idempotency-key
+judgment below, none of which exist in the code.
 
-Honors:
-  - integer cents, never float            (sess-005)
-  - Stripe call with idempotency + backoff (sess-004 / sess-007)
-  - JWT on every route                     (sess-002)
-  - double-spend guard via a refund ledger (sess-004 pattern)
-  - async SQLAlchemy session               (sess-001)
-  - NEW policy (saved live in Act 2): partial up to original minus prior, 90-day window
+From MEMORY (not in the code — this is what closes the gap):
+  - Refund cap: partial refunds up to original charge minus prior refunds   (seeded policy, sess-004)
+  - 90-day refund window; older -> HTTP 422 / manager approval               (seeded policy, sess-004)
+  - Idempotency key is a per-attempt UUID (refund-{uuid}), NEVER amount-based (Act 2 write beat)
+
+From reading the codebase (a no-memory agent gets these too):
+  - integer cents, Stripe idempotency + backoff, JWT + ownership, async session, Refund ledger
 """
 
 # ============================================================================

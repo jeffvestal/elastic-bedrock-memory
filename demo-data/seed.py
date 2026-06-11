@@ -111,6 +111,7 @@ SESSIONS = [
         "facts": [
             ("architecture", "Payment processor: Stripe (not Braintree) — better webhooks, Stripe Elements for PCI scope, Payment Intents for 3DS2/EU compliance", "critical"),
             ("engineering", "Webhook idempotency: webhook_events table with unique constraint on stripe_event_id", "high"),
+            ("engineering", "Refund policy (decided, not yet built): partial refunds are allowed, capped at the original charge minus any refunds already issued for that order — never refund more than was paid. Refunds are permitted only within 90 days of the order date; older refunds require manager approval and must return HTTP 422.", "critical"),
         ]
     },
     {

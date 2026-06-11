@@ -59,21 +59,60 @@ land instead of looking like a grep.
 
 ---
 
-## Pre-recording setup (once)
+## Recording flow — three states, set once each, recorded in story order
+
+The demo needs three different states. Record in story order and you set each one
+exactly once. `--prep` only edits `mcp.json` now — it does **not** touch the codebase.
+
+> ⚠️ Do **not** run `--nuclear` as a "baseline" — it *builds + seeds* everything,
+> which makes the live-build capture (Phase 2) show "already exists" instead of
+> creation. Use the phases below.
 
 ```bash
 cd ~/repos/elastic-bedrock-memory
-
-# 1. Clean Elastic state, then we'll build it live on camera in Segment 3.
-python3 setup/demo-setup.py --nuclear   # deletes + recreates indices, full rebuild
-# (For the Segment 3 capture you'll re-run the INDIVIDUAL scripts on camera against
-#  a clean project — see Segment 3. --nuclear here just guarantees a known baseline.)
-
-# 2. Reset the codebase to baseline.
-git -C ~/repos/checkout-service-demo checkout .
-
-# 3. Confirm fonts 16px+, window 1920×1080, dock/menubar hidden.
+# Confirm fonts 16px+, window 1920×1080, dock/menubar hidden.
 ```
+
+### ⚡ Just get me to Act 1 (don't care where I am)
+
+```bash
+cd ~/repos/elastic-bedrock-memory
+python3 setup/demo-setup.py --prep                 # a — strip memory out of Kiro
+git -C ~/repos/checkout-service-demo checkout .     # b — clean the codebase
+# c — restart Kiro, pick the DEFAULT agent (NOT checkout-memory)
+```
+Now start Act 1. Any memory you already built stays put — Act 1 just can't see it, which is the point. (You only need `--clean` when you're ready to *film the live-build*.)
+
+---
+
+**Phase 1 — Act 1 (amnesia).** No memory wired.
+```bash
+python3 setup/demo-setup.py --prep                 # removes elastic-memory from mcp.json
+git -C ~/repos/checkout-service-demo checkout .     # codebase baseline
+# Restart Kiro; select the STOCK/default agent (NOT checkout-memory).
+# Verify: Kiro's /mcp list shows NO elastic-memory and no memory tools.
+```
+Record Act 1. (Whether the indices hold data is irrelevant — memory isn't wired.)
+
+**Phase 2 — Segment 3 (live-build).** Empty Elastic so the scripts show real creation.
+```bash
+python3 setup/demo-setup.py --clean                # deletes indices + agent/tools/skill (keeps the workflow)
+```
+Then record on camera: `create-indices.py` → `create-agent.py` → `seed.py`. Memory is now built + populated.
+
+**Phase 3 — Wire + Act 2 + Act 3.** Memory wired.
+```bash
+python3 setup/demo-setup.py --add-mcp              # adds elastic-memory back to mcp.json
+git -C ~/repos/checkout-service-demo checkout .     # baseline, so refunds don't already exist from Act 1
+# Restart Kiro; select the checkout-memory agent.
+```
+Record Segment 4 (the mcp.json before/after is automatic — Phase 1's `--prep` is the
+"before", this `--add-mcp` is the "after"), then Act 2, then Act 3.
+
+> **Dry run vs recording:** for a quick end-to-end *test* you don't need `--clean` —
+> already-built memory is fine; just `--prep` for Act 1, then `--add-mcp` + the
+> checkout-memory agent for Act 2/3. `--clean` exists only to make the live-build
+> *capture* show creation.
 
 ### State matrix — what must be true per segment
 
@@ -91,7 +130,7 @@ git -C ~/repos/checkout-service-demo checkout .
 
 ---
 
-# SEGMENT 2 — Act 1: Amnesia (refunds, built wrong) · ~6 min
+# SEGMENT 2 — Act 1: Amnesia (refunds built clean — but policy-blind) · ~6 min
 
 **State:** Kiro launched from `~/repos/checkout-service-demo`, **stock agent**, no
 elastic-memory in mcp.json. Kiro can read/grep the code but has zero access to the
@@ -111,58 +150,55 @@ customer request a refund on an order — support partial refunds where they can
 a dollar amount to refund. Wire it up to Stripe.
 ```
 
-**Why this prompt:** it forces *new* reasoning — a dollar-amount input (float
-temptation), a brand-new Stripe call (idempotency slip), a fresh route (JWT slip),
-and partial-amount math (cents + double-refund slip). The house rules aren't carried
-over because the agent reasons from general priors, not the team's history.
+**What actually happens (verified live):** with the repo in front of it, a capable
+agent gets the *code patterns* right by reading them — integer cents, Stripe
+idempotency + backoff, JWT + ownership, a Refund model, async session. **Don't expect
+it to write buggy code — it won't, and that's fine.** The gaps are the things that
+live only in team decisions, never in the code.
 
-### Target slips (need ~3 of 4 to land the point)
+### What it gets right vs. the gaps (the gaps are the whole point)
 
-| # | Slip | Reference to violated decision |
-|---|------|-------------------------------|
-| 1 | Accepts a **float** dollar amount and/or does float math → reintroduces the 1-cent bug | money = integer cents (sess-005) |
-| 2 | `stripe.Refund.create(...)` with **no `idempotency_key`** (and no backoff) | Stripe idempotency + backoff (sess-004/007) |
-| 3 | New `/refund` route has **no `Depends(get_current_user)`** | JWT on every route (sess-002) |
-| 4 | **No guard** against double-refund / refunding more than the order total | idempotency ledger (sess-004) |
+| ✅ Right — from *reading the repo* | ❌ Missing — lives only in *team memory* |
+|---|---|
+| integer cents (`dollars_to_cents`) | **No cumulative cap** → it may add a naive per-call `amount > order total` guard, but never tallies prior refunds, so the order can be drained over repeated calls |
+| Stripe idempotency + `_with_backoff` | **No 90-day window** — no time check at all |
+| JWT + ownership check | **Amount-based idempotency key** (`{order_id}-refund-{amount_cents}`) → two equal partial refunds collide; Stripe silently drops the 2nd |
+| Refund model, async session | (and it states the key choice *confidently* in a comment — wrong, but sure of itself) |
 
-### Eliciting the slips (if Kiro behaves "too well")
-- Keep the prompt fast and direct — don't tell it to "review the codebase first."
-- The phrase "pass a dollar amount to refund" is the float lure. Keep it.
-- If it still nails everything, add a follow-up: `Keep it simple, just get the happy
-  path working.` — agents cutting corners skip auth and idempotency first.
-- Worst case (it gets 1–2 right): still fine. One reintroduced cents bug + one missing
-  auth is enough to carry "I had to remember this *for* it."
-- Verify the take against `demo_scripts/reference/refunds-amnesiac.py`.
+You don't need to "elicit" anything — a good agent exhibits all three gaps naturally.
+Verify the take against `demo_scripts/reference/refunds-amnesiac.py`.
 
-### The correction beats (Jeff types these as he catches each slip)
+### The correction beats (Jeff feeds the policy from his own memory)
 
-1. `Hold on — we store money as integer cents, never floats. We had a 1-cent rounding
-   bug from exactly this kind of math two weeks ago. Use the money helpers.`
-2. `That Stripe refund needs an idempotency key like our charge path does, or a retry
-   double-refunds the customer.`
-3. `This route isn't authenticated — every other route uses get_current_user.`
-4. *(if applicable)* `And guard against double refunds and refunding more than the
-   order total.`
+1. `Even with that cap, you never tally prior refunds — I can refund the full amount,
+   then do it again. Our policy is cumulative: capped at the original charge minus
+   everything already refunded.`
+2. `And there's no time limit. We only allow refunds within 90 days; older ones go to
+   manager approval — return a 422.`
+3. `That idempotency key is order-id plus amount — two $10 refunds on one order would
+   collide and the second silently wouldn't go through. Keys have to be per-attempt.`
 
-Kiro fixes each — **but only because you remembered.** That's the whole point.
+Kiro fixes each — **but only because *you* remembered the team's decisions.** Note the
+shape: it's not that Kiro is dumb. It wrote good code. It just couldn't see the policy.
 
 ### Breaking point (to the room, ~45–60s — let it land)
-> "Every one of those corrections is something my team *already decided*. The cents
-> rule — we paid for that with a production bug. The idempotency pattern, the auth
-> convention. It's written down in past sessions, it's in my head, it's in a
-> teammate's brain. Kiro had none of it. And tomorrow, new session, I do this all
-> over again. That's the amnesia tax — every session, every teammate, forever."
+> "Look at what happened. Kiro wrote clean code — cents, idempotency, auth — because it
+> could read the codebase. But it had no idea about our refund *policy*: it'd refund more
+> than you paid, with no time limit. And it shipped an idempotency bug we'd catch in
+> review. None of that is in the code — it's in decisions my team made, in past sessions,
+> in my head. Kiro couldn't see any of it. New session tomorrow? Same blind spots, again."
 
 ### Capture notes
-- Capture the wrong code streaming in (compress to ~20–30s in Navattic).
-- Capture each correction → Kiro's fix at near-real speed (these are the rich beats).
-- Hold on the final "fixed by hand" diff before the breaking-point line.
+- Capture the clean code streaming in (compress to ~20–30s).
+- Capture each correction → Kiro's fix at near-real speed (the rich beats).
+- Hold on the over-refund gap + the amount-based key line before the breaking point —
+  those two are the most visceral "it couldn't have known that."
 
 ---
 
 # SEGMENT 3 — Live-build the memory system · ~10 min
 
-**State:** a **freshly reset** Elastic project (run `--nuclear` before this take so the
+**State:** an **empty** Elastic project (run `--clean` before this take so the
 scripts show *clean creation*, not "already exists"). Terminal + browser (Kibana).
 
 **Frame:** "Kiro's amnesia isn't Kiro's fault — it has no memory store. So let me build
@@ -248,28 +284,30 @@ a dollar amount to refund. Wire it up to Stripe.
 
 ### Target behavior
 1. **Before writing code**, Kiro calls `search-knowledge-facts` (the Skill kicks in).
-   nlQuery resembles: *"money handling, payments, Stripe, refund-related decisions."*
-   → retrieves: integer cents (sess-005), Stripe idempotency (sess-004), retry/backoff
-   (sess-007), JWT auth (sess-002). **This tool call is the money shot — let it breathe.**
-2. Writes the refund route **correctly, first pass**, and **cites sources**: "Based on
-   the decision in session 5, amounts are integer cents…"; "matching the idempotency
-   pattern from session 4…". Target output: `demo_scripts/reference/refunds-correct.py`.
-3. **Side-by-side:** put Act 1's hand-corrected mess next to this (you have multiple
-   screens). Same prompt. One fought you; one knew the house rules.
+   nlQuery resembles: *"refund policy, refund rules, payment decisions."* → retrieves the
+   **refund policy** (partial cap + 90-day window, sess-004) alongside the payment
+   patterns. **This tool call is the money shot — let it breathe.**
+2. Writes the refund route with the **policy baked in** — caps the amount at original
+   minus prior refunds, enforces the 90-day window (422 otherwise) — and **cites the
+   source**: "Per the refund policy from session 4…". Target: `reference/refunds-correct.py`.
+   (It gets cents/idempotency/JWT right too — but so did Act 1; the *visible* win is the policy.)
+3. **Side-by-side:** Act 1 (refunds more than the order, no window, amount-keyed) next to
+   Act 2 (capped, windowed, cites the decision). Same prompt.
 
-> "Same prompt. Word for word. The only thing that changed is that Kiro can see what we
-> already decided — so it just *does it right*. And it tells me where each rule came from."
+> "Same prompt. The amnesiac build would refund more than the order, forever. This one
+> knows our policy — capped, 90-day window — because it read a decision we made weeks ago.
+> And it tells me which session it came from."
 
-### Go deeper (this is the "restart and go longer" beat)
-- If Kiro carried over the backoff/retry without being asked: **call it out.** "Notice
-  it applied the retry-with-backoff from our charge path to the refund call — I never
-  asked. It pattern-matched our own conventions."
-- Introduce the **new** decision:
-  > `Now enforce the refund rules: partial refunds up to the original charge minus any
-  > prior refunds, and only within 90 days of the order. Then save that policy to memory.`
+### Go deeper — turn Act 1's bug into memory (the write beat)
+The policy was *recalled* (already in memory). Now create something **new**: the fix for
+the idempotency-key bug Act 1 shipped.
+  > `One more thing — the refund idempotency key can't be amount-based; two equal partial
+  > refunds would collide. Use a per-attempt UUID (refund-{uuid}). Save that as a decision
+  > so we never repeat it.`
 - `save-knowledge-fact` fires. Watch the tool call (fact, category, project, importance).
-  > "That decision didn't exist anywhere a minute ago — not in the code, not in memory.
-  > Now it's in Elasticsearch. Kiro just wrote to the team's memory."
+  > "That bug the amnesiac version shipped a minute ago? I just turned the fix into team
+  > memory. Next session — mine or a teammate's — the agent retrieves it and never makes
+  > that mistake again."
 
 ### Capture notes
 - Capture the `search-knowledge-facts` call → retrieved facts → code generation, with
@@ -280,15 +318,15 @@ a dollar amount to refund. Wire it up to Stripe.
 
 # SEGMENT 6 — Act 3: Cross-session + under the hood · ~4 min
 
-**State:** post-Act-2 (the refund-policy fact is now saved). checkout-memory agent.
+**State:** post-Act-2 (the idempotency-key rule is now saved). checkout-memory agent.
 
 ### Cross-session / teammate read-back (~90s)
 - **New Kiro session** (frame it: "now I'm a teammate on a different machine, brand new
-  context"). Ask:
+  context, about to add another Stripe write"). Ask:
   ```
-  What's our refund policy — can customers get partial refunds, and is there a time limit?
+  What's our convention for idempotency keys on refunds?
   ```
-- `search-knowledge-facts` fires → returns the 90-day / partial-cap fact saved in Act 2.
+- `search-knowledge-facts` fires → returns the per-attempt-UUID rule **saved in Act 2**.
 > "Brand new session. A decision made minutes ago by a different developer — retrieved
 > instantly. That's cross-session, cross-machine, cross-team. The memory isn't on my
 > laptop. It's in Elasticsearch."
@@ -309,7 +347,7 @@ type. But don't re-explain the agent — Segment 3 already built it.)*
 | Retake | Reset |
 |--------|-------|
 | Act 1 | `git -C ~/repos/checkout-service-demo checkout .`; fresh stock Kiro session |
-| Live-build | `python3 setup/demo-setup.py --nuclear` (clean project again) |
+| Live-build | `python3 setup/demo-setup.py --clean` (empty Elastic again) |
 | Wire memory | `python3 setup/demo-setup.py --prep` (removes elastic-memory), restart Kiro |
 | Act 2 | `git checkout .` in codebase; `--reset` if a stray fact was saved; fresh session |
 | Act 3 read-back | fresh Kiro session (do NOT reuse the Act 2 session) |

@@ -39,28 +39,31 @@ WORKFLOW_NAME = "save-knowledge-fact"
 INDEX = "knowledge-facts"
 TEST_DOC_SESSION = "validate-write-path-test"
 
+# NOTE (Elastic 9.5 serverless): `inputs` MUST be nested under the manual trigger,
+# not top-level. Only then does Agent Builder derive the workflow-tool parameter
+# schema (so the agent can pass `fact` etc.). Top-level `inputs:` parses to
+# definition.inputs=null and the tool exposes no params -> agent writes empty docs.
 WORKFLOW_YAML = """\
 name: save-knowledge-fact
 enabled: true
 triggers:
   - type: manual
-inputs:
-  - name: fact
-    type: string
-    required: true
-  - name: category
-    type: string
-  - name: project
-    type: string
-  - name: importance
-    type: string
+    inputs:
+      - name: fact
+        type: string
+        required: true
+      - name: category
+        type: string
+      - name: project
+        type: string
+      - name: importance
+        type: string
 steps:
   - name: save_fact
-    type: elasticsearch.request
+    type: elasticsearch.index
     with:
-      method: POST
-      path: /knowledge-facts/_doc?refresh=wait_for
-      body:
+      index: knowledge-facts
+      document:
         session_id: "agent-write"
         timestamp: "{{ execution.startedAt | date: '%Y-%m-%dT%H:%M:%SZ' }}"
         category: "{{ inputs.category }}"
@@ -68,6 +71,7 @@ steps:
         fact_semantic: "{{ inputs.fact }}"
         project: "{{ inputs.project }}"
         importance: "{{ inputs.importance }}"
+      refresh: wait_for
 """
 
 

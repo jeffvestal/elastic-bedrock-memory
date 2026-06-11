@@ -353,10 +353,18 @@ type. But don't re-explain the agent — Segment 3 already built it.)*
 | Act 3 read-back | fresh Kiro session (do NOT reuse the Act 2 session) |
 | Full reset | `python3 setup/demo-setup.py --reset` + `git checkout .` in codebase |
 
-## Open risk carried from HANDOFF
-The `save-knowledge-fact` write path (Workflow `save-knowledge-fact-3`) was created with
-`valid: False` in Kibana's API response. **Verify it fires and writes end-to-end before
-recording Segment 5's write beat.** If it doesn't: fall back to the local MCP sidecar
-(`mcp-sidecar/save-fact-server.py`) for the write, or stage the write beat as "Kiro
-proposes the save; here it is landing in Kibana" using a direct ES write. See HANDOFF
-"OPEN ISSUE" section.
+## Write path — RESOLVED (2026-06-11)
+The `save-knowledge-fact` write beat works end-to-end (agent → tool → workflow → ES),
+verified via the Agent Builder converse API: the agent passed a real `fact` and the doc
+landed fully populated with an ISO `timestamp`.
+
+**The fix that mattered (Elastic 9.5 serverless gotcha):** workflow `inputs` MUST be
+nested **under the manual trigger**, not declared top-level. Only then does Agent Builder
+derive the workflow-tool parameter schema, so the agent has params to fill. Top-level
+`inputs:` parse to `definition.inputs=null`, the tool exposes `properties: {}`, and the
+agent writes empty docs. The write step uses `elasticsearch.index` (document block);
+`timestamp` is `{{ execution.startedAt | date: '%Y-%m-%dT%H:%M:%SZ' }}` (raw renders as a
+non-ISO JS date string ES rejects). Both are baked into `setup/validate-write-path.py`.
+
+**Before recording:** restart Kiro so it reloads the re-derived tool, then confirm the
+write beat fires and `knowledge-facts` goes 18 → 19.

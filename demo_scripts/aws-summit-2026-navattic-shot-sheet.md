@@ -210,7 +210,7 @@ See run-book **Reset procedures between takes** for exact commands. Summary:
 | 7 — Kibana | None | Re-navigate from Agent Builder home — read-only |
 | Full retake | `python3 setup/demo-setup.py --reset` + `git checkout .` in codebase | Restores 67 docs, agent re-created |
 
-**Open risk (from run-book):** Verify `save-knowledge-fact` workflow fires and writes end-to-end before recording Scene 5's write beat. Fallback procedures in run-book "Open risk" section.
+**Write path — RESOLVED (2026-06-11):** the `save-knowledge-fact` write beat works end-to-end (agent → tool → workflow → ES), verified via the converse API. The 9.5 fix was nesting workflow `inputs` under the manual trigger so Agent Builder exposes the tool params. **Only gotcha before recording:** restart Kiro so it reloads the re-derived tool, then confirm Scene 5's save fires and `knowledge-facts` goes 18 → 19. See run-book "Write path — RESOLVED".
 
 ---
 

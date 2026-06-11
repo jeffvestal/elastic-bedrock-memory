@@ -41,6 +41,7 @@ TEST_DOC_SESSION = "validate-write-path-test"
 
 WORKFLOW_YAML = """\
 name: save-knowledge-fact
+enabled: true
 triggers:
   - type: manual
 inputs:
@@ -53,10 +54,6 @@ inputs:
     type: string
   - name: importance
     type: string
-  - name: session_id
-    type: string
-  - name: timestamp
-    type: string
 steps:
   - name: save_fact
     type: elasticsearch.request
@@ -64,13 +61,13 @@ steps:
       method: POST
       path: /knowledge-facts/_doc?refresh=wait_for
       body:
-        session_id: "{{inputs.session_id | default('agent-write')}}"
-        timestamp: "{{inputs.timestamp}}"
-        category: "{{inputs.category}}"
-        fact: "{{inputs.fact}}"
-        fact_semantic: "{{inputs.fact}}"
-        project: "{{inputs.project}}"
-        importance: "{{inputs.importance}}"
+        session_id: "agent-write"
+        timestamp: "{{ execution.startedAt | date: '%Y-%m-%dT%H:%M:%SZ' }}"
+        category: "{{ inputs.category }}"
+        fact: "{{ inputs.fact }}"
+        fact_semantic: "{{ inputs.fact }}"
+        project: "{{ inputs.project }}"
+        importance: "{{ inputs.importance }}"
 """
 
 
@@ -96,11 +93,21 @@ def es_client():
 
 
 def get_existing_workflow(kib, workflow_id):
-    """Return workflow data if it exists, else None."""
+    """Return workflow data if it exists, else None.
+
+    GET /api/workflows/{id} returns 404 in 9.3.0 even for existing workflows, which
+    made this always create a new one (orphan accumulation). The list endpoint is
+    reliable — match by id there.
+    """
     if not workflow_id:
         return None
-    resp = kib.get(f"{KIBANA_URL}/api/workflows/{workflow_id}", timeout=10)
-    return resp.json() if resp.status_code == 200 else None
+    resp = kib.get(f"{KIBANA_URL}/api/workflows", timeout=10)
+    if resp.status_code != 200:
+        return None
+    for w in resp.json().get("results", []):
+        if w.get("id") == workflow_id:
+            return w
+    return None
 
 
 def create_workflow(kib):

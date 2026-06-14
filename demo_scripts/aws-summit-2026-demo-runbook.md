@@ -321,8 +321,9 @@ the idempotency-key bug Act 1 shipped.
 **State:** post-Act-2 (the idempotency-key rule is now saved). checkout-memory agent.
 
 ### Cross-session / teammate read-back (~90s)
-- **New Kiro session** (frame it: "now I'm a teammate on a different machine, brand new
-  context, about to add another Stripe write"). Ask:
+- **New Kiro session**, then `/agent` → **checkout-memory** (a fresh session defaults to
+  stock Kiro — re-select the agent or the memory tools won't fire). Frame it: "now I'm a
+  teammate on a different machine, brand new context, about to add another Stripe write". Ask:
   ```
   What's our convention for idempotency keys on refunds?
   ```

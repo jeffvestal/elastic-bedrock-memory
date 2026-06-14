@@ -166,7 +166,7 @@ See run-book **State matrix** section for what must be true per segment before p
 
 | # | Action | Capture? | Timing | Highlight / Hotspot |
 |---|--------|----------|--------|---------------------|
-| 1 | New Kiro session — frame it: "Now I'm a teammate. Brand new context, about to add another Stripe write." Type: `What's our convention for idempotency keys on refunds?` | ✅ Cap 6a | compress | Hotspot on prompt: "Brand new session. A bug fixed minutes ago by a different developer." |
+| 1 | New Kiro session, then `/agent` → **checkout-memory** (fresh session = re-select the agent, or the memory tools won't fire). Frame it: "Now I'm a teammate. Brand new context, about to add another Stripe write." Type: `What's our convention for idempotency keys on refunds?` | ✅ Cap 6a | compress | Hotspot on prompt: "Brand new session. A bug fixed minutes ago by a different developer." |
 | 2 | `search-knowledge-facts` fires → returns the per-attempt-UUID rule saved in Act 2 | ✅ Cap 6b | real-time | Hotspot on tool call: "Same tool. Different session. Different developer. Same memory." |
 | 3 | Response: per-attempt UUID (`refund-{uuid}`), never amount-based — exact rule from Act 2's write beat | ✅ Cap 6c | real-time | Hotspot on answer: "Retrieved instantly. A bug fixed in Act 2 is now team memory. Cross-session, cross-machine, cross-team." |
 

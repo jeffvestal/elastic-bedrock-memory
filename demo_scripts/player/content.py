@@ -13,7 +13,7 @@ capture over the fragment list to upgrade fidelity.
 SEGMENTS exposes each act as its own list so selftest.py can assert per-segment.
 STEPS is the concatenation the player runs.
 """
-from play import (
+from engine import (
     line, blank, rule, tool, toolline, write, code, footer, banner, status,
     idle, sessionend, step_input, step_stream, step_instant,
 )
@@ -237,15 +237,55 @@ WIRE = shell_cmd(
     label="wire: --add-mcp",
 )
 
+# Simulated vi edit — shows the mcp.json file with elastic-memory block being inserted.
+# Auth token is masked — never display real credentials.
+# Used in REPLAY_BEATS for the Wire section.
+WIRE_VI = [
+    step_input("vi ~/.kiro/settings/mcp.json", prefix=SHELL, label="wire: open mcp.json in vi"),
+    step_stream([
+        blank(),
+        line("{", indent=0, stream=False, style="dim"),
+        line('  "mcpServers": {', indent=0, stream=False, style="dim"),
+        line('    "existing-server": { ... },', indent=0, stream=False, style="dim"),
+        blank(),
+        write(
+            "~/.kiro/settings/mcp.json",
+            "adding elastic-memory MCP server",
+            diff=[
+                ("+", "", '"elastic-memory": {'),
+                ("+", "", '  "url": "https://bedrock-memory-demo.kb.us-east-1.aws.elastic.cloud/api/agent_builder/mcp",'),
+                ("+", "", '  "headers": {'),
+                ("+", "", '    "Authorization": "Basic ‹redacted›",'),
+                ("+", "", '    "kbn-xsrf": "true",'),
+                ("+", "", '    "Accept": "application/json"'),
+                ("+", "", '  }'),
+                ("+", "", '}'),
+            ],
+        ),
+        line("-- INSERT --", indent=0, stream=False, style="accent"),
+        blank(),
+        line(":wq", indent=0, stream=False, style="dim"),
+        line('"~/.kiro/settings/mcp.json" written', indent=0, stream=False, style="dim"),
+    ], label="wire: mcp.json vi edit"),
+]
+
 
 # ===========================================================================
 # ACT 2 — memory-wired Kiro. VERBATIM (2026-06-11 capture).
+# Sub-lists allow REPLAY_BEATS to reference individual phases while STEPS
+# still passes ACT2_BUILD = ACT2_SEARCH + ... as before.
 # ===========================================================================
-ACT2_BUILD = [
+
+# --- ACT2_SEARCH: two tool calls + confirmation line ---
+ACT2_SEARCH = [
     tool("search-knowledge-facts", "nlQuery=refund policy partial refunds Stripe"),
     tool("search-knowledge-facts", "nlQuery=money handling currency cents dollars"),
     blank(),
     line("Good — I have the team decisions. Let me read the existing code structure before implementing."),
+]
+
+# --- ACT2_PLAN: codebase reads + decision citations + implementation plan ---
+ACT2_PLAN = [
     toolline(f"Read {REPO}"),
     toolline("Read (5 files)", detail="models.py, payments.py, checkout.py, money.py, main.py"),
     blank(),
@@ -261,6 +301,10 @@ ACT2_BUILD = [
     blank(),
     line("I need to: add a Refund model, add create_refund to payments.py, and add the POST endpoint. "
          "Let me implement:"),
+]
+
+# --- ACT2_MODELS: write models.py ---
+ACT2_MODELS = [
     write(
         f"{REPO}/app/models.py",
         "added 11 lines at L47 in models.py",
@@ -279,6 +323,10 @@ ACT2_BUILD = [
             (" ", "47", "class WebhookEvent(Base):"),
         ],
     ),
+]
+
+# --- ACT2_PAYMENTS: write payments.py ---
+ACT2_PAYMENTS = [
     write(
         f"{REPO}/app/payments.py",
         "added 17 lines, removed 1 line at L68 in payments.py",
@@ -303,6 +351,10 @@ ACT2_BUILD = [
             ("+", "84", "    )"),
         ],
     ),
+]
+
+# --- ACT2_CHECKOUT: narration line + write checkout.py ---
+ACT2_CHECKOUT = [
     line("Now add the refund endpoint to the checkout router:"),
     write(
         f"{REPO}/app/routers/checkout.py",
@@ -341,6 +393,10 @@ ACT2_BUILD = [
             ("+", "149", '    return {"refund_id": refund.id, "amount_cents": refund_cents, "stripe_refund_id": stripe_refund.id}'),
         ],
     ),
+]
+
+# --- ACT2_VERIFY_SUMMARY: verification + summary + footer ---
+ACT2_VERIFY_SUMMARY = [
     line("Let me verify the final state of all changed files:"),
     toolline("Read (3 files)", detail="checkout.py, payments.py, models.py"),
     blank(),
@@ -368,12 +424,16 @@ ACT2_BUILD = [
     footer("0.83", "1m 24s"),
 ]
 
+# ACT2_BUILD is the concatenation — classic player calls kiro_turn(REFUND_PROMPT, ACT2_BUILD, ...).
+ACT2_BUILD = ACT2_SEARCH + ACT2_PLAN + ACT2_MODELS + ACT2_PAYMENTS + ACT2_CHECKOUT + ACT2_VERIFY_SUMMARY
+
 STEP7_PROMPT = (
     "One more thing — the refund idempotency key can't be amount-based; two equal partial "
     "refunds would collide. Use a per-attempt UUID (refund-{uuid}). Save that as a decision"
 )
 
-ACT2_WRITEBEAT = [
+# --- ACT2_FIX: the one-line fix to the idempotency key ---
+ACT2_FIX = [
     line("Good catch. Fixing the idempotency key first, then saving the decision."),
     write(
         f"{REPO}/app/routers/checkout.py",
@@ -384,6 +444,13 @@ ACT2_WRITEBEAT = [
             (" ", "135", "    stripe_refund = payments.create_refund("),
         ],
     ),
+]
+
+# --- ACT2_SAVE: save-knowledge-fact call + result + confirmation ---
+# NOTE: code() block here uses the original collapsed form so that ACT2_WRITEBEAT
+# concatenates back byte-identically for the classic player (golden snapshot).
+# The expanded form is used directly in REPLAY_BEATS below.
+ACT2_SAVE = [
     tool(
         "save-knowledge-fact",
         'fact=Refund idempotency key must be a per-attempt UUID (format: "refund-{uuid4}"), '
@@ -397,6 +464,38 @@ ACT2_WRITEBEAT = [
         "    {",
         "    ...+5 lines (ctrl+o to toggle)",
     ]),
+    blank(),
+    line('Done. One-line change in checkout.py — idempotency_key = f"refund-{uuid.uuid4()}" — and the '
+         "decision is saved to memory. The key is now generated fresh per attempt, so two $5.00 refunds "
+         "on the same order each get a unique key and both go through to Stripe correctly."),
+    footer("0.23", "23s"),
+]
+
+# ACT2_WRITEBEAT is the concatenation — classic player calls kiro_turn(STEP7_PROMPT, ACT2_WRITEBEAT, ...).
+ACT2_WRITEBEAT = ACT2_FIX + ACT2_SAVE
+
+# Expanded save-knowledge-fact result for REPLAY_BEATS (richer than the original collapsed capture).
+# RECONSTRUCTED — expanded from collapsed capture
+_ACT2_SAVE_EXPANDED = [
+    tool(
+        "save-knowledge-fact",
+        'fact=Refund idempotency key must be a per-attempt UUID (format: "refund-{uuid4}"), '
+        "NOT order+amount based — two equal partial refunds on the same order would collide on "
+        "an amount-based key and cause the second to be silently deduplicated by Stripe., "
+        "category=payments, importance=high, project=checkout-service",
+    ),
+    # RECONSTRUCTED — expanded from collapsed capture
+    code([
+        "{",
+        '  "_id": "Wn9ktp4B",',
+        '  "_index": "knowledge-facts",',
+        '  "result": "created",',
+        '  "fact": "Refund idempotency key must be a per-attempt UUID (format: \\"refund-{uuid4}\\"), NOT order+amount based.",',
+        '  "category": "payments",',
+        '  "importance": "high",',
+        '  "project": "checkout-service"',
+        "}",
+    ], indent=2),
     blank(),
     line('Done. One-line change in checkout.py — idempotency_key = f"refund-{uuid.uuid4()}" — and the '
          "decision is saved to memory. The key is now generated fresh per attempt, so two $5.00 refunds "
@@ -420,8 +519,14 @@ ACT2 = (
 
 # ===========================================================================
 # ACT 3 — fresh session, cross-session read-back. VERBATIM (clean take).
+# Sub-lists for REPLAY_BEATS; ACT3_READBACK is the concatenation for kiro_turn.
 # ===========================================================================
-ACT3_READBACK = [
+
+# --- ACT3_SEARCH: tool call + result ---
+# NOTE: code() block here uses the original collapsed form so that ACT3_READBACK
+# concatenates back byte-identically for the classic player (golden snapshot).
+# The expanded form is used directly in REPLAY_BEATS below.
+ACT3_SEARCH = [
     tool("search-knowledge-facts", "nlQuery=idempotency keys refunds convention"),
     code([
         "{",
@@ -429,6 +534,27 @@ ACT3_READBACK = [
         "    {",
         "    ...+5 lines (ctrl+o to toggle)",
     ]),
+]
+
+# Expanded search result for REPLAY_BEATS (richer than the original collapsed capture).
+# RECONSTRUCTED — expanded from collapsed capture
+_ACT3_SEARCH_EXPANDED = [
+    tool("search-knowledge-facts", "nlQuery=idempotency keys refunds convention"),
+    # RECONSTRUCTED — expanded from collapsed capture
+    code([
+        "{",
+        '  "_score": 0.942,',
+        '  "_id": "Wn9ktp4B",',
+        '  "fact": "Refund idempotency key must be a per-attempt UUID (format: \\"refund-{uuid4}\\"), NOT order+amount based — two equal partial refunds on the same order would collide on an amount-based key.",',
+        '  "category": "payments",',
+        '  "importance": "high",',
+        '  "project": "checkout-service"',
+        "}",
+    ], indent=2),
+]
+
+# --- ACT3_ANSWER: the agent's explanation + code snippet + footer ---
+ACT3_ANSWER = [
     blank(),
     line("The convention is:"),
     blank(),
@@ -450,6 +576,9 @@ ACT3_READBACK = [
     ]),
     footer("0.07", "14s"),
 ]
+
+# ACT3_READBACK is the concatenation — classic player calls kiro_turn(..., ACT3_READBACK, ...).
+ACT3_READBACK = ACT3_SEARCH + ACT3_ANSWER
 
 ACT3 = (
     kiro_launch("Act 3 — fresh session")
@@ -478,3 +607,205 @@ SEGMENTS = {
 }
 
 STEPS = ACT1 + LIVEBUILD + WIRE + ACT2 + ACT3
+
+
+# ---------------------------------------------------------------------------
+# REPLAY_BEATS — ordered beats for the two-column replay player (replay.py).
+# Each beat is a dict:
+#   label     : str  — unique key; must match a NOTES entry in notes.py
+#   act       : str  — act label shown in the header
+#   prompt    : str|None — typed user input shown at beat start (None = no prompt)
+#   fragments : list — fragment dicts to stream in the left pane
+# ---------------------------------------------------------------------------
+REPLAY_BEATS = [
+    # --- ACT 1 PLACEHOLDER ---
+    {
+        "label": "act1-placeholder",
+        "act": "Act 1 — Amnesiac Kiro",
+        "prompt": None,
+        "fragments": [
+            line("[ Act 1 capture pending — slot reserved ]", style="dim"),
+            line("This beat will show stock Kiro building the refund endpoint policy-blind.", style="dim"),
+            blank(),
+            line("• No search-knowledge-facts call", style="dim"),
+            line("• Gets code patterns right (cents, idempotency, JWT) but misses the 3 POLICY rules", style="dim"),
+            line("• Amount-based idempotency key (the bug that Act 2 fixes)", style="dim"),
+        ],
+    },
+
+    # --- LIVE BUILD ---
+    {
+        "label": "live-build: create-indices",
+        "act": "Live Build",
+        "prompt": "python3 setup/create-indices.py",
+        "fragments": [line(o, indent=0, stream=False) for o in [
+            "Creating indices...",
+            "  conversation-history: created",
+            "  knowledge-facts: created",
+            "  session-metadata: created",
+            "Done.",
+        ]] + [blank()],
+    },
+    {
+        "label": "live-build: create-agent",
+        "act": "Live Build",
+        "prompt": "python3 setup/create-agent.py",
+        "fragments": [line(o, indent=0, stream=False) for o in [
+            "Creating Agent Builder skill...",
+            "  ✓ checkout-memory-retrieval: created",
+            "",
+            "Creating Agent Builder tools...",
+            "  ✓ search-conversation-history: created",
+            "  ✓ search-knowledge-facts: created",
+            "  ✓ get-recent-conversations: created",
+            "  ✓ list-sessions: created",
+            "  ✓ save-knowledge-fact: created",
+            "",
+            "Creating Agent Builder agent...",
+            "  ✓ Agent: checkout-service-memory",
+            "",
+            "✅ Setup complete.",
+            "   Agent ID: checkout-service-memory",
+            "   Tools: 5 (read + write)",
+            "   MCP endpoint:   https://bedrock-memory-demo.kb.us-east-1.aws.elastic.cloud/api/agent_builder/mcp",
+        ]] + [blank()],
+    },
+    {
+        "label": "live-build: seed",
+        "act": "Live Build",
+        "prompt": "python3 demo-data/seed.py",
+        "fragments": [line(o, indent=0, stream=False) for o in [
+            "Seeding 40 conversation turns, 18 facts, 10 sessions...",
+            "Indexed: 68 docs",
+            "Done. Run a test query:",
+            "  Index: knowledge-facts, conversation-history, session-metadata",
+        ]] + [blank()],
+    },
+
+    # --- WIRE (vi edit) ---
+    {
+        "label": "wire: open mcp.json in vi",
+        "act": "Wire",
+        "prompt": "vi ~/.kiro/settings/mcp.json",
+        "fragments": [
+            blank(),
+            line("{", indent=0, stream=False, style="dim"),
+            line('  "mcpServers": {', indent=0, stream=False, style="dim"),
+            line('    "existing-server": { ... },', indent=0, stream=False, style="dim"),
+            blank(),
+            write(
+                "~/.kiro/settings/mcp.json",
+                "adding elastic-memory MCP server",
+                diff=[
+                    ("+", "", '"elastic-memory": {'),
+                    ("+", "", '  "url": "https://bedrock-memory-demo.kb.us-east-1.aws.elastic.cloud/api/agent_builder/mcp",'),
+                    ("+", "", '  "headers": {'),
+                    ("+", "", '    "Authorization": "Basic ‹redacted›",'),
+                    ("+", "", '    "kbn-xsrf": "true",'),
+                    ("+", "", '    "Accept": "application/json"'),
+                    ("+", "", '  }'),
+                    ("+", "", '}'),
+                ],
+            ),
+            line("-- INSERT --", indent=0, stream=False, style="accent"),
+            blank(),
+            line(":wq", indent=0, stream=False, style="dim"),
+            line('"~/.kiro/settings/mcp.json" written', indent=0, stream=False, style="dim"),
+        ],
+    },
+    {
+        "label": "wire: start kiro",
+        "act": "Wire",
+        "prompt": "kiro-cli",
+        "fragments": [
+            banner(),
+            blank(),
+            rule(),
+            status("checkout-memory"),
+            blank(),
+            idle(),
+        ],
+    },
+    {
+        "label": "wire: restart Kiro, select agent",
+        "act": "Wire",
+        "prompt": "/agent",
+        "fragments": [
+            line("● Switched to agent: checkout-memory", indent=0, style="accent"),
+        ],
+    },
+
+    # --- ACT 2 ---
+    {
+        "label": "Act 2 — refund ask (memory)",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": REFUND_PROMPT,
+        "fragments": ACT2_SEARCH,
+    },
+    {
+        "label": "Act 2 — plan (team decisions)",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": None,
+        "fragments": ACT2_PLAN,
+    },
+    {
+        "label": "Act 2 — write models.py",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": None,
+        "fragments": ACT2_MODELS,
+    },
+    {
+        "label": "Act 2 — write payments.py",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": None,
+        "fragments": ACT2_PAYMENTS,
+    },
+    {
+        "label": "Act 2 — write checkout.py",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": None,
+        "fragments": ACT2_CHECKOUT,
+    },
+    {
+        "label": "Act 2 — verify + summary",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": None,
+        "fragments": ACT2_VERIFY_SUMMARY,
+    },
+    {
+        "label": "Act 2 — write beat (fix idempotency key)",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": STEP7_PROMPT,
+        "fragments": ACT2_FIX,
+    },
+    {
+        "label": "response: Act 2 — write beat (save UUID rule)",
+        "act": "Act 2 — Memory Kiro",
+        "prompt": None,
+        # Use expanded code block for the replay pane (more informative than the collapsed original).
+        "fragments": _ACT2_SAVE_EXPANDED,
+    },
+
+    # --- ACT 3 ---
+    {
+        "label": "Act 3 — fresh session, select agent",
+        "act": "Act 3 — Fresh Session",
+        "prompt": "/agent",
+        "fragments": [
+            line("● Switched to agent: checkout-memory", indent=0, style="accent"),
+        ],
+    },
+    {
+        "label": "Act 3 — read-back (teammate)",
+        "act": "Act 3 — Fresh Session",
+        "prompt": "What's our convention for idempotency keys on refunds?",
+        # Use expanded code block for the replay pane (more informative than the collapsed original).
+        "fragments": _ACT3_SEARCH_EXPANDED,
+    },
+    {
+        "label": "Act 3 — answer",
+        "act": "Act 3 — Fresh Session",
+        "prompt": None,
+        "fragments": ACT3_ANSWER,
+    },
+]

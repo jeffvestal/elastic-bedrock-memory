@@ -269,6 +269,108 @@ def check_pty_smoke():
     return True, f"spawned in pty, lone-ESC ignored, clean exit (advanced_to_livebuild={advanced})"
 
 
+# ---------------------------------------------------------------------------
+# Replay checks (split-screen player)
+# ---------------------------------------------------------------------------
+
+def check_replay_note_coverage():
+    """Every REPLAY_BEATS beat must have a NOTES entry."""
+    import notes as notes_mod
+    missing = [b["label"] for b in content.REPLAY_BEATS if b["label"] not in notes_mod.NOTES]
+    if missing:
+        return False, f"beats missing NOTES entries: {missing}"
+    return True, f"all {len(content.REPLAY_BEATS)} replay beats have a NOTES entry"
+
+
+def check_replay_vi_beat_safety():
+    """vi beat must contain the real structure keys and NOT a real auth token."""
+    import re
+    import engine as eng
+    wire_beat = next(
+        (b for b in content.REPLAY_BEATS if b["label"] == "wire: open mcp.json in vi"), None
+    )
+    if wire_beat is None:
+        return False, "vi beat 'wire: open mcp.json in vi' not found in REPLAY_BEATS"
+    rendered = " ".join(
+        ln for frag in wire_beat["fragments"]
+        for ln, _ in eng.fragment_to_lines(frag, 160, False)
+    )
+    for key in ("url", "Authorization", "kbn-xsrf", "Accept"):
+        if key not in rendered:
+            return False, f"vi beat missing expected key: {key!r}"
+    b64_pat = re.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
+    if b64_pat.search(rendered):
+        return False, f"vi beat may contain real auth token: {b64_pat.search(rendered).group()!r}"
+    if "redacted" not in rendered:
+        return False, "vi beat missing '‹redacted›' mask for auth value"
+    return True, "vi beat: required keys present, auth masked, no real token"
+
+
+def check_replay_expanded_tool_calls():
+    """REPLAY_BEATS must not contain the collapsed '...+5 lines (ctrl+o to toggle)' marker."""
+    import engine as eng
+    collapsed_marker = "ctrl+o to toggle"
+    for b in content.REPLAY_BEATS:
+        rendered = " ".join(
+            ln for frag in b["fragments"]
+            for ln, _ in eng.fragment_to_lines(frag, 160, False)
+        )
+        if collapsed_marker in rendered:
+            return False, f"replay beat {b['label']!r} still has collapsed code block"
+    # Also verify Wn9ktp4B is present in the act2-save and act3-search replay beats
+    for label in ("response: Act 2 — write beat (save UUID rule)", "Act 3 — read-back (teammate)"):
+        beat = next((b for b in content.REPLAY_BEATS if b["label"] == label), None)
+        if beat is None:
+            return False, f"expected replay beat not found: {label!r}"
+        rendered = " ".join(
+            ln for frag in beat["fragments"]
+            for ln, _ in eng.fragment_to_lines(frag, 160, False)
+        )
+        if "Wn9ktp4B" not in rendered:
+            return False, f"replay beat {label!r}: Wn9ktp4B not present (expanded fact ID expected)"
+    return True, "no collapsed markers in REPLAY_BEATS; Wn9ktp4B present in act2-save and act3-search"
+
+
+def check_replay_headless():
+    """replay.py --render-all --speed 0 exits 0 and outputs key content."""
+    import subprocess
+    replay_path = os.path.join(HERE, "replay.py")
+    try:
+        res = subprocess.run(
+            [sys.executable, replay_path, "--render-all", "--speed", "0", "--no-color"],
+            capture_output=True, text=True, timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return False, "replay --render-all timed out"
+    if res.returncode != 0:
+        return False, f"replay --render-all exited rc={res.returncode}: {res.stderr[:200]}"
+    out = res.stdout
+    missing = [t for t in ("Memory Kiro", "Wire", "Wn9ktp4B", "redacted", "Live Build")
+               if t not in out]
+    if missing:
+        return False, f"replay output missing tokens: {missing}"
+    return True, f"replay --render-all: {len(out)} chars, all key tokens present"
+
+
+def check_replay_golden_preserved():
+    """Classic player still renders the golden snapshot byte-for-byte."""
+    golden_path = "/tmp/demo-player-golden.txt"
+    if not os.path.exists(golden_path):
+        return "SKIP", "golden snapshot file not found (run initial golden capture first)"
+    buf = []
+    import play_classic as pc
+    pc.Player(content.STEPS, out=buf.append, color=False, speed=0).render_all()
+    current = "".join(buf)
+    with open(golden_path) as f:
+        golden = f.read()
+    if current == golden:
+        return True, f"classic render matches golden ({len(golden)} chars)"
+    for i, (a, b) in enumerate(zip(golden, current)):
+        if a != b:
+            return False, f"golden mismatch at char {i}: expected={a!r} got={b!r}"
+    return False, f"golden length mismatch: expected={len(golden)} got={len(current)}"
+
+
 CHECKS = [
     ("1  import & schema", check_schema),
     ("2  render smoke", check_render_smoke),
@@ -281,6 +383,12 @@ CHECKS = [
     ("9  terminal-restore sanity", check_restore_sanity),
     ("10 no-rich plain code", check_no_rich),
     ("11 PTY smoke (real terminal)", check_pty_smoke),
+    # --- Replay player checks ---
+    ("12 replay: note coverage", check_replay_note_coverage),
+    ("13 replay: vi beat safety (no real token)", check_replay_vi_beat_safety),
+    ("14 replay: expanded tool calls", check_replay_expanded_tool_calls),
+    ("15 replay: headless render-all", check_replay_headless),
+    ("16 replay: golden snapshot preserved", check_replay_golden_preserved),
 ]
 
 

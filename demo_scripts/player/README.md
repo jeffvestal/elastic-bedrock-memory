@@ -1,80 +1,126 @@
-# Demo Player — a fake Kiro terminal you drive with the arrow keys
+# Demo Player — AWS Summit 2026
 
-A scripted terminal "movie" for the AWS Summit hands-on demo. It runs **inside your real
-iTerm2**, so the window/font/theme are genuinely real — the program only reproduces Kiro's
-in-terminal rendering and animates the typing + streaming. No network, no real Kiro, no real
-scripts. Fully deterministic. It replaces the live demo / Navattic recording.
+Two players live here. **`replay.py` is the main one for the stage.** `play_classic.py` is the
+proven fallback if anything goes wrong.
 
-## Run it
+---
+
+## replay.py — the split-screen player (recommended)
+
+Embraces that it's pre-recorded. Two-column layout: left = terminal transcript streaming in,
+right = synced commentary (your stage cues + audience read-along). One right-arrow per beat,
+17 beats total. No fake typing — the prompt appears as already-entered and the response streams.
 
 ```bash
-python3 demo_scripts/player/play.py                  # full run from the top
-python3 demo_scripts/player/play.py --list            # print the step index -> label map
-python3 demo_scripts/player/play.py --from-step 14    # jump in (use --list to find N)
-python3 demo_scripts/player/play.py --speed 1.5       # faster typing/streaming
-python3 demo_scripts/player/play.py --render-all       # auto-play the whole thing (no keys)
-python3 demo_scripts/player/play.py --render-all --speed 0   # instant dump (headless/debug)
+python3 demo_scripts/player/replay.py                    # full run
+python3 demo_scripts/player/replay.py --list              # beat index → label map
+python3 demo_scripts/player/replay.py --from-beat 6       # jump in (0-indexed)
+python3 demo_scripts/player/replay.py --speed 1.3         # faster streaming
+python3 demo_scripts/player/replay.py --render-all --speed 0   # headless dump (CI)
 ```
 
-## On stage — keymap
-
+### Keymap
 | Key | Does |
 |-----|------|
-| **→ (right)** | Play the next step. The model is **two presses per turn**: press once → the prompt **types out**; press again → that's **Enter**, the response **streams in**, then stops. |
-| **→ mid-animation** | **Fast-forward**: drains the rest of the current step instantly (never skips output). Handy if a stream is running long while you talk. |
-| **← (left)** | Step back one step (re-renders instantly). Recovery for an over-advance. |
-| **mouse / trackpad scroll** | Native iTerm2 scrollback — scroll up to show earlier output mid-talk. Works because the player stays on the normal screen buffer. |
-| **q** / **Ctrl-C** | Quit and restore the terminal. |
+| **→ (right)** | Play the next beat. Output streams in; press again mid-stream to fast-forward (drain). |
+| **← (left)** | Step back one beat (re-renders instantly). |
+| **↑ / ↓** | Scroll the left transcript pane up/down (while paused). Advancing a beat returns to bottom. |
+| **q** / **Ctrl-C** | Quit and restore the terminal (alt-screen exits cleanly). |
 
-The window/tab **title** shows your position (`demo-player 7/29 — next: …`) so you always know
-where you are without cluttering the screen.
+### Layout
 
-### Stage tips
-- Set the iTerm2 window first; the player adapts to its width (rules/status line/wrap).
-- For a re-take of one act, `--list` to find the index, then `--from-step N`.
-- Right-arrow is the only key you need for a clean linear run.
+```
+┌ demo-replay  beat 7/17 · Act 2 — Memory Kiro ──────────────────────────────┐
+│ LEFT (60%): terminal transcript          │ RIGHT (40%): commentary          │
+│   kiro-cli                               │  HEADLINE (what's happening)     │
+│   ● search-knowledge-facts               │                                  │
+│     ╰ nlQuery=refund policy…             │  • detail bullet                 │
+│   Good — I have the team decisions.      │  • detail bullet                 │
+│                                          │  • detail bullet                 │
+└ → next  ← back  ↑↓ scroll  q quit ──────────────────────────────────────────┘
+```
 
-## What it covers
+The right pane reads as audience explanation but is really your stage cues. No visible labeling.
 
-Full hands-on portion, in story order: **Act 1** (amnesiac stock Kiro builds the refund
-endpoint policy-blind) → **live-build** (`create-indices` / `create-agent` / `seed`) →
-**wire** (`--add-mcp`, `/agent`) → **Act 2** (memory-wired Kiro: searches first, cites the
-sessions, builds it right, then the write beat) → **Act 3** (fresh session reads the saved
-rule back).
+### Beat structure (17 beats)
+| # | Act | Label |
+|---|-----|-------|
+| 0 | Act 1 | Placeholder (swap in real capture) |
+| 1–3 | Live Build | create-indices / create-agent / seed |
+| 4–5 | Wire | vi mcp.json edit / select agent |
+| 6–13 | Act 2 | search → plan → models → payments → checkout → verify → fix → save |
+| 14–16 | Act 3 | select agent → search → answer |
 
-## Editing the script
+---
 
-All content is data in **`content.py`** — the engine (`play.py`) is generic.
+## play_classic.py — the original live-typed player (fallback)
 
-- A demo is `STEPS` (a flat list). `SEGMENTS` exposes each act for the self-test.
-- Build turns with the helpers: `kiro_launch`, `kiro_turn`, `kiro_idle_end`, `shell_cmd`.
-- Compose output from fragments: `line`, `blank`, `rule`, `tool`, `toolline`, `write`,
-  `code`, `footer`, `banner`, `status`, `idle`, `sessionend` (defined in `play.py`).
-- Tweak the **palette** and **timing** constants at the top of `play.py` to match a Kiro
-  screenshot exactly or change the pace.
+The proven fallback. Same two-press interaction model as before: press 1 = prompt types out,
+press 2 = Enter/response streams. Normal screen buffer (native iTerm2 scrollback preserved).
 
-### Verbatim vs reconstructed
-Act 2 + Act 3 are **verbatim** from the 2026-06-11 capture. Act 1, the live-build output,
-and the wire step are **reconstructed** and marked `# RECONSTRUCTED — swap for real capture`
-in `content.py`. To upgrade fidelity, run the real thing once and paste the captured output
-over that segment's fragment list.
+```bash
+python3 demo_scripts/player/play_classic.py                  # full run
+python3 demo_scripts/player/play_classic.py --list            # step index
+python3 demo_scripts/player/play_classic.py --from-step 14    # jump in
+python3 demo_scripts/player/play_classic.py --speed 1.5       # faster
+python3 demo_scripts/player/play_classic.py --render-all --speed 0   # headless
+```
 
-## Verify after editing
+---
+
+## Verify after any edit
 
 ```bash
 python3 demo_scripts/player/selftest.py
 ```
 
-Runs without a TTY or network. Checks schema, render, the two-press structure, the
-act-contrast invariants (Act 1 makes no `search-knowledge-facts` call; Act 2 searches +
-saves + writes three files; Act 3 reads back), verbatim-token fidelity, the Act 1 policy
-gaps, key decoding (including the lone-ESC no-hang case), fast-forward drain, and a real-pty
-smoke test. Exits non-zero on any failure.
+16 checks, no TTY or network needed. Covers: schema, render, two-press structure, act-contrast,
+verbatim fidelity (Act 2/3), Act 1 policy gaps, key decoding, fast-forward drain, terminal
+restore, no-rich, **replay note coverage**, **vi beat credential safety**, **expanded tool calls**,
+**replay headless render**, **classic golden snapshot**. Exits non-zero on any failure.
 
-## Notes / non-goals
+---
 
-- It's a player, not a terminal emulator — it doesn't talk to a shell or to Kiro.
-- The status line is rendered **inline** (it scrolls with the content) rather than pinned to
-  the bottom — pinning would require the alternate screen, which breaks native scrollback.
-  Inline flow is the deliberate trade-off that keeps scroll-up working like a real terminal.
-- Code blocks render plain (dim), matching how Kiro shows them — no `rich` dependency.
+## Files
+
+| File | Purpose |
+|------|---------|
+| `replay.py` | The new split-screen player (main stage player) |
+| `play_classic.py` | Original live-typed player (proven fallback) |
+| `play.py` | Compatibility shim (`from engine import *`; `from play_classic import Player`) |
+| `engine.py` | Shared core: palette, timing, fragment factories, `decode_key`, `fragment_to_lines` |
+| `content.py` | Demo as pure data: `STEPS` (classic), `REPLAY_BEATS` (replay), `SEGMENTS` (selftest) |
+| `notes.py` | Right-pane commentary: `NOTES = {beat_label: {headline, bullets}}` |
+| `selftest.py` | 16-check verification harness |
+
+---
+
+## Editing the demo script
+
+**Content is in `content.py`** — the engines are generic. For replay, edit `REPLAY_BEATS`. For
+classic, the `SEGMENTS` / `STEPS` structure is unchanged. Edit notes in `notes.py`.
+
+Fragment vocabulary (defined in `engine.py`): `line`, `blank`, `rule`, `tool`, `toolline`,
+`write`, `code`, `footer`, `banner`, `status`, `idle`, `sessionend`.
+
+**After any content change:** run `python3 demo_scripts/player/selftest.py` — 16 green.
+
+### Verbatim vs reconstructed
+Act 2 + Act 3 are **verbatim** from the 2026-06-11 capture (tool calls, fact IDs `sess-004-fact-2`,
+`Wn9ktp4B`, the diffs). Act 1 is a **placeholder beat** (slot reserved). Live build, wire, and
+the `/agent` picks are **reconstructed** (marked `# RECONSTRUCTED` in `content.py`).
+
+### Act 1 slot
+`REPLAY_BEATS[0]` has `label: "act1-placeholder"`. Drop in the real capture by replacing its
+`fragments` list — mirroring how the Act 2 sub-lists are structured. Run selftest after.
+
+---
+
+## Stage tips
+
+- Set the iTerm2 window to your stage profile *before* launching — the player adapts to the
+  current terminal size on each beat and on SIGWINCH (window resize).
+- `--list` to find a beat index, then `--from-beat N` to jump in for a re-take.
+- Right-arrow is the only key for a clean linear run. Fast-forward mid-stream = drain instantly.
+- If `replay.py` crashes and leaves the terminal weird: `reset` (shell command) restores it,
+  and `play_classic.py` is the one-command fallback.

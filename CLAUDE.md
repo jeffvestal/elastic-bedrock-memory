@@ -20,7 +20,7 @@
 | Semantic search verified end-to-end | ✅ | refund decisions retrieved correctly |
 | Checkout service demo codebase | ✅ | `~/repos/checkout-service-demo` (separate repo) |
 | GitHub repo (private) | ✅ | github.com/jeffvestal/elastic-bedrock-memory |
-| Slide deck (22 slides, work copy) | ✅ | id `151FhokgExhlNBw1FuqPwyYVWVvlyKHfAJVBUiYUYUK4` |
+| Slide deck (25 slides, AWS-formatted) | ✅ | id `1bJmOPJLSAJhAMu07gV0r00hM-sfx_Eu9kCaTqq8NYZA` |
 | Demo run-book | ✅ | `demo_scripts/aws-summit-2026-demo-runbook.md` |
 | FAQ-as-content script | ✅ | `demo_scripts/aws-summit-2026-faq.md` |
 | Reference refund implementations | ✅ | `demo_scripts/reference/refunds-correct.py`, `refunds-amnesiac.py` |

@@ -5,7 +5,7 @@ Exports:
   Palette, timing constants, KIRO_BANNER/BANNER_WELCOME
   Quit exception
   Fragment factories: line, blank, rule, tool, toolline, write, code, footer, banner,
-                      status, idle, sessionend
+                      status, idle, sessionend, permbreak, mcpbreak, thinking
   Step factories: step_input, step_stream, step_instant
   decode_key(read_byte, wait_ready) -> key name
   apply_color(s, style, enabled, palette) -> styled string
@@ -140,6 +140,27 @@ def sessionend(resume):
     return {"t": "sessionend", "resume": resume}
 
 
+def permbreak(path, scope="app", stage="both"):
+    """Write-approval dialog — rendered before the first granted write in a session.
+    stage: 'trust' (first dialog only), 'scope' (second dialog only), or 'both'
+    (default). The replay player pauses after each staged dialog so the presenter
+    arrows through every approval."""
+    return {"t": "permbreak", "path": path, "scope": scope, "stage": stage}
+
+
+def mcpbreak(tool_name):
+    """MCP read-tool first-use approval dialog — real Kiro shows this before the
+    first call to each MCP tool. Pauses the replay player so the presenter arrows
+    through the approval. Order differs from permbreak: 'Yes, single permission'
+    is highlighted first (matching Image #11 screenshot)."""
+    return {"t": "mcpbreak", "tool_name": tool_name}
+
+
+def thinking():
+    """Kiro 'Thinking...' indicator shown while the agent processes tool results."""
+    return {"t": "thinking"}
+
+
 # ---------------------------------------------------------------------------
 # Step factories.
 # ---------------------------------------------------------------------------
@@ -249,7 +270,14 @@ def fragment_to_lines(frag, width, color=True):
 
     elif t == "toolline":
         dot = c("●", "tool")
-        result = [(f"{dot} {frag['label']}", T_LINE)]
+        label = frag["label"]
+        # Color path segments (anything starting with /) in teal, matching real Kiro
+        parts = label.split(" ", 1)
+        if len(parts) == 2 and parts[1].startswith("/"):
+            label_rendered = parts[0] + " " + c(parts[1], "tool")
+        else:
+            label_rendered = label
+        result = [(f"{dot} {label_rendered}", T_LINE)]
         if frag.get("detail"):
             result.append((c(f"    {frag['detail']}", "dim"), T_TOOL))
         else:
@@ -273,7 +301,7 @@ def fragment_to_lines(frag, width, color=True):
 
     elif t == "footer":
         txt = f"▸ Credits: {frag['credits']} • Time: {frag['time']}"
-        return [(c(txt, "dim"), T_GAP)]
+        return [("", 0.0), (c(txt, "dim"), T_GAP)]
 
     elif t == "banner":
         result = []
@@ -299,9 +327,56 @@ def fragment_to_lines(frag, width, color=True):
     elif t == "sessionend":
         return [
             ("", 0.0),
+            ("", 0.0),
+            ("", 0.0),
             (c("Session ended.", "dim"), 0.0),
-            (c(f"Resume with: kiro-cli chat --resume-id {frag['resume']}", "dim"), 0.0),
+            (c(f"Resume with: kiro-cli --resume-id {frag['resume']}", "dim"), 0.0),
+            ("", 0.0),
+            ("", 0.0),
+            ("", 0.0),
         ]
+
+    elif t == "permbreak":
+        path = frag.get("path", "")
+        scope = frag.get("scope", "app")
+        stage = frag.get("stage", "both")
+        short = path.split("/")[-1] if "/" in path else path
+        trust = [
+            (c("  write requires approval", "dim"), T_LINE),
+            (c("  ▶ Trust, always allow in this session", "accent"), T_LINE),
+            (c("    Yes, single permission", "dim"), 0.0),
+            (c("    No (Tab to edit)", "dim"), 0.0),
+            ("", T_GAP),
+        ]
+        scope_dialog = [
+            (c("  write requires approval · trust options", "dim"), T_LINE),
+            (c(f"  ▶ Complete directory   {scope}", "accent"), T_LINE),
+            (c(f"    Specific paths       {short}", "dim"), 0.0),
+            (c("    Entire tool", "dim"), 0.0),
+            ("", T_GAP),
+            (c("  ESC to close · Tab to edit", "dim"), T_GAP),
+            ("", 0.0),
+        ]
+        if stage == "trust":
+            return trust
+        if stage == "scope":
+            return scope_dialog
+        return trust + scope_dialog
+
+    elif t == "mcpbreak":
+        tool_name = frag.get("tool_name", "mcp-tool")
+        return [
+            (c(f"  {tool_name} requires approval", "dim"), T_LINE),
+            (c("  ❯ Yes, single permission", "banner"), T_LINE),
+            (c("    Trust, always allow in this session", "dim"), 0.0),
+            (c("    No (Tab to edit)", "dim"), 0.0),
+            ("", T_GAP),
+            (c("  ESC to close | Tab to edit", "dim"), T_GAP),
+            ("", 0.0),
+        ]
+
+    elif t == "thinking":
+        return [(c("≡ Thinking... (esc to cancel)", "dim"), T_TOOL)]
 
     else:
         return [(f"[unknown fragment: {t}]", 0.0)]

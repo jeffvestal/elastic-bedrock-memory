@@ -24,7 +24,8 @@ import content  # noqa: E402
 
 KNOWN_FRAGS = {
     "line", "blank", "rule", "tool", "toolline", "write", "code",
-    "footer", "banner", "status", "idle", "sessionend",
+    "footer", "banner", "status", "idle", "sessionend", "permbreak",
+    "mcpbreak", "thinking",
 }
 
 
@@ -112,7 +113,7 @@ def check_act_contrast():
 def check_verbatim_fidelity():
     combined = render(content.SEGMENTS["act2"]) + render(content.SEGMENTS["act3"])
     tokens = [
-        "sess-004-fact-2", "sess-005-fact-0", "sess-007-fact-0", "Wn9ktp4B",
+        "sess-004-fact-2", "sess-005-fact-0", "sess-007-fact-0", "Wn9ktp4BniyjIMohO9V5",
         "refund-{order_id}-{refund_cents}", "refund-{uuid.uuid4()}", "▸ Credits",
     ]
     missing = [t for t in tokens if t not in combined]
@@ -122,14 +123,17 @@ def check_verbatim_fidelity():
 
 
 def check_act1_gaps():
-    a1 = render(content.SEGMENTS["act1"])
-    if "{order_id}-refund-{amount_cents}" not in a1:
-        return False, "Act 1 should ship the amount-based idempotency key"
+    # Check ONLY the initial amnesiac response — corrections legitimately add policy terms
+    # when Jeff explicitly teaches Kiro about the cap, 90-day window, and key collision.
+    # ACT1_RESPONSE is the "money shot": what stock Kiro ships without memory.
+    initial = render([play.step_stream(content.ACT1_RESPONSE)])
+    if 'refund-{order_id}-{amount_cents}"' not in initial:
+        return False, "Act 1 initial response should ship amount-based key (refund-{order_id}-{amount_cents})"
     forbidden = ["90-day", "90 days", "prior refund", "capped", "refund window"]
-    leaked = [p for p in forbidden if p.lower() in a1.lower()]
+    leaked = [p for p in forbidden if p.lower() in initial.lower()]
     if leaked:
-        return False, f"Act 1 leaked a policy it can't know: {leaked}"
-    return True, "Act 1 ships amount-based key; no policy leakage"
+        return False, f"Act 1 initial response leaked a policy it can't know: {leaked}"
+    return True, "Act 1 ships amount-based key; no policy leakage in initial response"
 
 
 def check_key_decoder():
@@ -291,10 +295,13 @@ def check_replay_vi_beat_safety():
     )
     if wire_beat is None:
         return False, "vi beat 'wire: open mcp.json in vi' not found in REPLAY_BEATS"
-    rendered = " ".join(
-        ln for frag in wire_beat["fragments"]
+    parts = [
+        ln for frag in wire_beat.get("fragments", [])
         for ln, _ in eng.fragment_to_lines(frag, 160, False)
-    )
+    ]
+    # vi content now lives in the fullscreen editor buffer, not the fragment stream.
+    parts += [text for text, _style in wire_beat.get("fullscreen", [])]
+    rendered = " ".join(parts)
     for key in ("url", "Authorization", "kbn-xsrf", "Accept"):
         if key not in rendered:
             return False, f"vi beat missing expected key: {key!r}"
@@ -307,17 +314,24 @@ def check_replay_vi_beat_safety():
 
 
 def check_replay_expanded_tool_calls():
-    """REPLAY_BEATS must not contain the collapsed '...+5 lines (ctrl+o to toggle)' marker."""
+    """REPLAY_BEATS: collapsed blocks only allowed in the MCP search beat (real Kiro output).
+    All other beats must use expanded code blocks. Full fact ID Wn9ktp4BniyjIMohO9V5 must
+    appear in act2-save and act3-search beats."""
     import engine as eng
     collapsed_marker = "ctrl+o to toggle"
+    # The search beat intentionally shows collapsed result blocks — this is the real Kiro UX
+    # where MCP tool results render collapsed (ctrl+o to expand). All other beats must be expanded.
+    allowed_collapsed = {"Act 2 — refund ask (memory)"}
     for b in content.REPLAY_BEATS:
+        if b["label"] in allowed_collapsed:
+            continue
         rendered = " ".join(
             ln for frag in b["fragments"]
             for ln, _ in eng.fragment_to_lines(frag, 160, False)
         )
         if collapsed_marker in rendered:
             return False, f"replay beat {b['label']!r} still has collapsed code block"
-    # Also verify Wn9ktp4B is present in the act2-save and act3-search replay beats
+    # Verify full real fact ID is in act2-save and act3-search (not just the short prefix)
     for label in ("response: Act 2 — write beat (save UUID rule)", "Act 3 — read-back (teammate)"):
         beat = next((b for b in content.REPLAY_BEATS if b["label"] == label), None)
         if beat is None:
@@ -326,9 +340,9 @@ def check_replay_expanded_tool_calls():
             ln for frag in beat["fragments"]
             for ln, _ in eng.fragment_to_lines(frag, 160, False)
         )
-        if "Wn9ktp4B" not in rendered:
-            return False, f"replay beat {label!r}: Wn9ktp4B not present (expanded fact ID expected)"
-    return True, "no collapsed markers in REPLAY_BEATS; Wn9ktp4B present in act2-save and act3-search"
+        if "Wn9ktp4BniyjIMohO9V5" not in rendered:
+            return False, f"replay beat {label!r}: full fact ID Wn9ktp4BniyjIMohO9V5 not present"
+    return True, "search beat uses real collapsed output; Wn9ktp4BniyjIMohO9V5 in act2-save and act3-search"
 
 
 def check_replay_headless():

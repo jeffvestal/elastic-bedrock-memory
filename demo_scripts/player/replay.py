@@ -46,17 +46,50 @@ from engine import (
 
 
 # ---------------------------------------------------------------------------
+# Prompt wrapping — typed user input must wrap inside the left pane, not run
+# off the screen past the divider.
+# ---------------------------------------------------------------------------
+def wrap_prompt_lines(prefix, text, width, color=True):
+    """
+    Wrap a typed prompt to `width`, hanging-indenting continuation lines under
+    the prefix. First line = dim prefix + user-colored text; continuations =
+    blank indent + user-colored text. Returns a list of styled strings.
+    """
+    hang = " " * len(prefix)
+    avail = max(8, width - len(prefix))
+    wrapped = textwrap.wrap(text, width=avail) if text else []
+    if not wrapped:
+        wrapped = [""]
+    out = []
+    for i, seg in enumerate(wrapped):
+        if i == 0:
+            out.append(apply_color(prefix, "dim", color) + apply_color(seg, "user", color))
+        else:
+            out.append(hang + apply_color(seg, "user", color))
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Right-pane note renderer
 # ---------------------------------------------------------------------------
 def render_note(note, width, color=True):
     """
-    Render a note dict {"headline": str, "bullets": [str, ...]} into a list of
-    styled strings (no \\n), each padded/truncated to exactly `width` characters.
+    Render a note dict {"headline": str, "bullets": [str, ...], "commentary": str}
+    into a list of styled strings (no \\n).
+
+    Layout:
+      - Headline (teal bold, larger feel via extra leading blank)
+      - One blank separator
+      - Bullets with a blank line between each for breathing room
+      - If "commentary" present: separator rule, then wrapped prose (dim white)
     """
     c = lambda s, style: apply_color(s, style, color)
     lines = []
     if not note:
         return lines
+
+    # Extra leading blank so headline doesn't butt against the top edge
+    lines.append("")
 
     # Headline (teal + bold, wrapped)
     headline = note.get("headline", "")
@@ -65,8 +98,9 @@ def render_note(note, width, color=True):
 
     lines.append("")  # blank separator
 
-    # Bullets
-    for bullet in note.get("bullets", []):
+    # Bullets — one blank line between each for vertical breathing room
+    bullets = note.get("bullets", [])
+    for bi, bullet in enumerate(bullets):
         prefix = "  •  "
         wrapped = textwrap.wrap(bullet, width - len(prefix) - 1)
         if not wrapped:
@@ -78,6 +112,31 @@ def render_note(note, width, color=True):
                 first = False
             else:
                 lines.append(c(" " * len(prefix) + part, "bullet"))
+        if bi < len(bullets) - 1:
+            lines.append("")  # spacing between bullets
+
+    # Commentary blob (optional) — separated by a dim rule, wrapped prose
+    commentary = note.get("commentary", "")
+    if commentary:
+        lines.append("")
+        lines.append(c("  " + "─" * (width - 4), "rule"))
+        lines.append("")
+        for part in textwrap.wrap(commentary, width - 4) or [commentary]:
+            lines.append(c("  " + part, "dim"))
+
+    # Query box (optional) — "see it in Elastic" header + ES|QL lines
+    queries = note.get("queries", [])
+    if queries:
+        lines.append("")
+        lines.append(c("  " + "─" * (width - 4), "rule"))
+        lines.append("")
+        lines.append(c("  ↗ now: Kibana → ES|QL", "dim"))
+        lines.append("")
+        for q in queries:
+            if q == "":
+                lines.append("")
+            else:
+                lines.append(c("  " + q, "tool"))
 
     return lines
 
@@ -89,9 +148,10 @@ def beat_to_lines(beat, width, color=True):
     """Render a beat's prompt + fragments into (styled_line, delay) pairs."""
     result = []
     if beat.get("prompt"):
-        pfx = apply_color("  > ", "dim", color)
-        ptext = apply_color(beat["prompt"], "user", color)
-        result.append((pfx + ptext, 0.0))
+        prefix = beat.get("prefix", "  > ")
+        for pl in wrap_prompt_lines(prefix, beat["prompt"], width, color):
+            result.append((pl, 0.0))
+        result.append(("", 0.0))  # blank line between prompt and response
     for frag in beat.get("fragments", []):
         result.extend(fragment_to_lines(frag, width, color))
     return result
@@ -124,6 +184,9 @@ class ReplayPlayer:
         self._beat_idx = 0
         self._line_buf = []   # accumulated styled lines (no \\n)
         self._scroll_offset = 0  # 0 = bottom, positive = scroll up
+        self._half_beat = False  # True = prompt shown, waiting for "enter" press
+        self._in_fullscreen = False  # True = vi-style full-pane takeover active
+        self._awaiting_approval = False  # True = paused mid-stream on an approval dialog
 
         # Layout
         self._left_w = 72
@@ -297,24 +360,20 @@ class ReplayPlayer:
         c = lambda s, style: apply_color(s, style, self.color)
         n_beats = len(self.beats)
         at_end = beat_idx >= n_beats
-
-        frame_parts = []
-
-        # Move to top-left and clear screen (prevents stale-frame artifacts in alt-screen)
-        frame_parts.append("\x1b[H\x1b[2J\x1b[H")
+        content_rows = self._content_rows
 
         # --- Header ---
         if at_end:
             hdr = f"  demo-replay  {n_beats}/{n_beats} beats · done — press q to quit"
+        elif self._in_fullscreen:
+            hdr = f"  vi · {self.beats[beat_idx].get('prompt', 'editing')}"
         else:
             act_label = self.beats[beat_idx]["act"]
             beat_label = self.beats[beat_idx]["label"]
             hdr = f"  demo-replay  beat {beat_idx + 1}/{n_beats} · {act_label} · {beat_label}"
         hdr_padded = self._pad(c(hdr, "dim"), cols)
-        frame_parts.append(hdr_padded + "\n")
 
-        # --- Content rows ---
-        # Build right-pane note
+        # --- Right-pane note (still shown during a fullscreen takeover) ---
         if at_end:
             note = {
                 "headline": "Demo complete",
@@ -329,53 +388,75 @@ class ReplayPlayer:
             note = self.notes.get(note_key, {})
         right_lines = render_note(note, self._right_w, self.color)
 
-        # Compute left-pane window: scroll to bottom unless scrolled up
-        total_left = len(line_buf)
-        content_rows = self._content_rows
-        # scroll_offset=0 means show last content_rows lines
-        # scroll_offset=N means scroll up N lines from bottom
-        start_idx = max(0, total_left - content_rows - scroll_offset)
-        end_idx = max(0, total_left - scroll_offset)
-        visible_left = line_buf[start_idx:end_idx]
-        # Pad at top if not enough lines
-        while len(visible_left) < content_rows:
-            visible_left = [""] + visible_left
+        # --- Left-pane content ---
+        if self._in_fullscreen and not at_end:
+            # vi-style takeover: render the editor buffer, then '~' filler rows,
+            # and a status line on the last content row.
+            screen = self.beats[beat_idx].get("fullscreen", [])
+            vi_status = self.beats[beat_idx].get("vi_status", '"buffer" [+]')
+            visible_left = []
+            for text, style in screen:
+                visible_left.append(c(text, style))
+            while len(visible_left) < content_rows - 1:
+                visible_left.append(c("~", "rule"))
+            visible_left = visible_left[:content_rows - 1]
+            visible_left.append(c("  " + vi_status, "status"))
+        else:
+            # Normal scrolling transcript window: bottom unless scrolled up.
+            total_left = len(line_buf)
+            start_idx = max(0, total_left - content_rows - scroll_offset)
+            end_idx = max(0, total_left - scroll_offset)
+            visible_left = line_buf[start_idx:end_idx]
+            while len(visible_left) < content_rows:
+                visible_left = [""] + visible_left
 
         divider = c("│", "rule")
 
+        rows_out = [hdr_padded]
         for row in range(content_rows):
             left_line = visible_left[row] if row < len(visible_left) else ""
             right_line = right_lines[row] if row < len(right_lines) else ""
-
             left_padded = self._pad(left_line, self._left_w)
             right_padded = self._pad(right_line, self._right_w)
-            frame_parts.append(left_padded + divider + right_padded + "\n")
+            rows_out.append(left_padded + divider + right_padded)
 
-        # --- Footer ---
-        ftr = "  ← back  ↑↓/scroll  q quit" if at_end else "  → next  ← back  ↑↓/scroll  q quit"
-        ftr_padded = self._pad(c(ftr, "dim"), cols)
-        frame_parts.append(ftr_padded + "\n")
+        # --- Footer — nav hints in the right column only, left stays blank ---
+        if at_end:
+            ftr = "  ← back  ↑↓/scroll  q quit"
+        elif self._awaiting_approval:
+            ftr = "  → approve  q quit"
+        elif self._in_fullscreen:
+            fs_type = self.beats[beat_idx].get("fullscreen_type", "vi")
+            if fs_type == "picker":
+                ftr = "  → select agent  ← cancel"
+            else:
+                ftr = "  → :wq write & quit  ← cancel"
+        elif self._half_beat:
+            ftr = "  → run  ← cancel  ↑↓/scroll  q quit"
+        else:
+            ftr = "  → next  ← back  ↑↓/scroll  q quit"
+        ftr_left = " " * self._left_w
+        ftr_right = self._pad(c(ftr, "dim"), self._right_w)
+        rows_out.append(ftr_left + divider + ftr_right)
 
-        # Write atomically
-        frame = "".join(frame_parts)
-        self._write_raw(frame)
+        # --- Atomic write, flicker-free ---
+        # Home the cursor and overwrite each row in place (clear-to-EOL per line),
+        # then clear anything left below. No full-screen \x1b[2J flash, no trailing
+        # newline that would scroll the last row.
+        out = ["\x1b[H"]
+        for i, r in enumerate(rows_out):
+            out.append(r + "\x1b[K")
+            if i < len(rows_out) - 1:
+                out.append("\n")
+        out.append("\x1b[J")
+        self._write_raw("".join(out))
 
     # -------------------------------------------------------------------------
     # Beat streaming
     # -------------------------------------------------------------------------
-    def _stream_beat(self, beat_idx, line_buf):
-        """Stream one beat into the left pane with delays. RIGHT key skips delays."""
+    def _stream_beat_frags(self, beat_idx, line_buf):
+        """Stream this beat's fragments (prompt already in line_buf). RIGHT drains."""
         beat = self.beats[beat_idx]
-
-        # 1. Add prompt line instantly if present
-        if beat.get("prompt"):
-            pfx = apply_color("  > ", "dim", self.color)
-            ptext = apply_color(beat["prompt"], "user", self.color)
-            line_buf.append(pfx + ptext)
-            self._scroll_offset = 0
-            self._repaint(beat_idx, line_buf, self._scroll_offset)
-
-        # 2. Stream fragments
         skip = False
         for frag in beat.get("fragments", []):
             flines = fragment_to_lines(frag, self._left_w, self.color)
@@ -394,12 +475,33 @@ class ReplayPlayer:
                         raise Quit()
                     if k == "RIGHT":
                         skip = True  # drain remaining without skipping output
+            # Approval dialogs block until the presenter arrows through them —
+            # one pause per staged dialog. Honored even during fast-forward.
+            # permbreak = write-tool approval; mcpbreak = MCP read-tool first-use approval.
+            if frag.get("t") in ("permbreak", "mcpbreak"):
+                self._await_approval(beat_idx, line_buf)
+                skip = False  # resume normal pacing after the approval
 
-        # Check SIGWINCH after beat
         if self._needs_repaint:
             self._needs_repaint = False
             self._compute_layout()
             self._repaint(beat_idx, line_buf, self._scroll_offset)
+
+    def _await_approval(self, beat_idx, line_buf):
+        """Block on an approval dialog until the presenter presses → (approve).
+        QUIT exits; other keys are ignored. The footer reads '→ approve'."""
+        self._awaiting_approval = True
+        self._repaint(beat_idx, line_buf, self._scroll_offset)
+        try:
+            while True:
+                k = self._read_key()
+                if k == "QUIT":
+                    raise Quit()
+                if k == "RIGHT":
+                    break
+                # LEFT/UP/DOWN/ESC/NONE: ignore — an approval only goes forward.
+        finally:
+            self._awaiting_approval = False
 
     # -------------------------------------------------------------------------
     # Re-render a prefix of beats instantly (for 'back' navigation)
@@ -410,9 +512,12 @@ class ReplayPlayer:
         for bi in range(up_to_beat_idx):
             beat = self.beats[bi]
             if beat.get("prompt"):
-                pfx = apply_color("  > ", "dim", self.color)
-                ptext = apply_color(beat["prompt"], "user", self.color)
-                buf.append(pfx + ptext)
+                prefix = beat.get("prefix", "  > ")
+                if buf and buf[-1] != "":
+                    buf.append("")  # separator from the previous turn
+                for pl in wrap_prompt_lines(prefix, beat["prompt"], self._left_w, self.color):
+                    buf.append(pl)
+                buf.append("")  # blank line between prompt and response
             for frag in beat.get("fragments", []):
                 for fline_text, _delay in fragment_to_lines(frag, self._left_w, self.color):
                     buf.append(fline_text)
@@ -428,9 +533,16 @@ class ReplayPlayer:
             self._beat_idx = bi
             beat = self.beats[bi]
             if beat.get("prompt"):
-                pfx = apply_color("  > ", "dim", self.color)
-                ptext = apply_color(beat["prompt"], "user", self.color)
-                self._line_buf.append(pfx + ptext)
+                prefix = beat.get("prefix", "  > ")
+                if self._line_buf and self._line_buf[-1] != "":
+                    self._line_buf.append("")  # separator from the previous turn
+                for pl in wrap_prompt_lines(prefix, beat["prompt"], self._left_w, self.color):
+                    self._line_buf.append(pl)
+                self._line_buf.append("")  # blank line between prompt and response
+            # Fullscreen (vi) beats: surface the editor buffer in the headless
+            # snapshot so coverage checks see its content (e.g. the masked auth).
+            for text, _style in beat.get("fullscreen", []):
+                self._line_buf.append(apply_color(text, _style, self.color))
             for frag in beat.get("fragments", []):
                 for fline_text, _delay in fragment_to_lines(frag, self._left_w, self.color):
                     self._line_buf.append(fline_text)
@@ -468,17 +580,98 @@ class ReplayPlayer:
                 if key == "QUIT":
                     break
                 elif key == "RIGHT":
-                    if self._beat_idx < len(self.beats):
+                    if self._in_fullscreen:
+                        # vi ':wq' — exit the takeover, stream any post-edit
+                        # fragments (usually none), advance to the next beat.
+                        self._in_fullscreen = False
                         self._scroll_offset = 0
-                        self._stream_beat(self._beat_idx, self._line_buf)
+                        self._stream_beat_frags(self._beat_idx, self._line_buf)
                         self._beat_idx += 1
-                    # Always repaint (shows end state when beat_idx >= len)
-                    self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                        self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                    elif self._beat_idx < len(self.beats):
+                        beat = self.beats[self._beat_idx]
+                        if beat.get("prompt") and not self._half_beat:
+                            # First press: type out the prompt character by character,
+                            # wrapping inside the left pane (never off-screen).
+                            prefix = beat.get("prefix", "  > ")
+                            # 35ms per char regardless of speed (feels like fast human
+                            # typing); instant at speed=0.
+                            char_delay = 0 if self.speed <= 0 else 0.035
+                            prompt_start = len(self._line_buf)
+                            self._scroll_offset = 0
+                            # Blank separator between the previous turn and this prompt.
+                            lead = [""] if (self._line_buf and self._line_buf[-1] != "") else []
+
+                            typed = ""
+                            skip_typing = False
+                            cancel_typing = False
+                            self._line_buf[prompt_start:] = lead + wrap_prompt_lines(
+                                prefix, "", self._left_w, self.color)
+                            self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                            for ch in beat["prompt"]:
+                                typed += ch
+                                self._line_buf[prompt_start:] = lead + wrap_prompt_lines(
+                                    prefix, typed, self._left_w, self.color)
+                                self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                                if not skip_typing and char_delay > 0:
+                                    if self._wait_ready(char_delay):
+                                        k = self._read_key()
+                                        if k == "QUIT":
+                                            raise Quit()
+                                        elif k == "RIGHT":
+                                            skip_typing = True
+                                        elif k == "LEFT":
+                                            cancel_typing = True
+                                            break
+
+                            if cancel_typing:
+                                del self._line_buf[prompt_start:]  # remove partial prompt
+                                self._scroll_offset = 0
+                                self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                                continue
+
+                            # Ensure full prompt visible (skip_typing may have jumped out)
+                            self._line_buf[prompt_start:] = lead + wrap_prompt_lines(
+                                prefix, beat["prompt"], self._left_w, self.color)
+                            self._line_buf.append("")  # blank line before response
+                            self._half_beat = True
+                            self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                        elif beat.get("fullscreen") and self._half_beat:
+                            # Second press on a vi beat: open the editor takeover
+                            # (clean full-pane view); the stream comes on the next press.
+                            self._half_beat = False
+                            self._in_fullscreen = True
+                            self._scroll_offset = 0
+                            self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                        else:
+                            # Second press (or beat has no prompt): stream fragments
+                            self._half_beat = False
+                            self._scroll_offset = 0
+                            self._stream_beat_frags(self._beat_idx, self._line_buf)
+                            self._beat_idx += 1
+                            self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                    else:
+                        self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
                 elif key == "LEFT":
-                    self._beat_idx = max(0, self._beat_idx - 1)
-                    self._scroll_offset = 0
-                    self._line_buf = self._rebuild_line_buf(self._beat_idx)
-                    self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                    if self._in_fullscreen:
+                        # Back out of vi without writing: drop the typed `vi ...`
+                        # line and return to the clean pre-command shell state.
+                        self._in_fullscreen = False
+                        self._scroll_offset = 0
+                        self._line_buf = self._rebuild_line_buf(self._beat_idx)
+                        self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                    elif self._half_beat:
+                        # Cancel the half-shown prompt. The prompt may have wrapped to
+                        # several lines, so rebuild cleanly rather than popping a fixed count.
+                        self._half_beat = False
+                        self._scroll_offset = 0
+                        self._line_buf = self._rebuild_line_buf(self._beat_idx)
+                        self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
+                    else:
+                        self._beat_idx = max(0, self._beat_idx - 1)
+                        self._scroll_offset = 0
+                        self._line_buf = self._rebuild_line_buf(self._beat_idx)
+                        self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
                 elif key == "UP":
                     max_scroll = max(0, len(self._line_buf) - self._content_rows)
                     self._scroll_offset = min(max_scroll, self._scroll_offset + 3)
@@ -527,7 +720,10 @@ def _selftest(beats, notes):
             frag_lines = []
             for frag in beat.get("fragments", []):
                 frag_lines.extend(fragment_to_lines(frag, 120, color=False))
-            rendered = "\n".join(line for line, _ in frag_lines)
+            rendered_parts = [line for line, _ in frag_lines]
+            # The vi content now lives in the fullscreen buffer — check it too.
+            rendered_parts += [text for text, _style in beat.get("fullscreen", [])]
+            rendered = "\n".join(rendered_parts)
             # Must contain the masked placeholder
             if "‹redacted›" not in rendered:
                 errors.append("wire beat: auth value must render as 'Basic ‹redacted›'")
@@ -549,8 +745,8 @@ def main(argv=None):
                    help="print beat index -> act -> label map and exit")
     p.add_argument("--render-all", action="store_true",
                    help="auto-play every beat (no keys); pair with --speed 0 for instant")
-    p.add_argument("--speed", type=float, default=1.0,
-                   help="animation speed multiplier (0 = instant)")
+    p.add_argument("--speed", type=float, default=0.25,
+                   help="animation speed multiplier (0 = instant, default 0.25 = slow)")
     p.add_argument("--no-color", action="store_true",
                    help="disable ANSI color")
     args = p.parse_args(argv)

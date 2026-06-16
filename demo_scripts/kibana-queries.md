@@ -1,7 +1,5 @@
 # Kibana ES|QL — Demo Reference
 
-Open this in a second tab. Copy-paste into Kibana Dev Console during Segment 6.
-
 ---
 
 ## Refund policy fact (sess-004) — what Act 2 retrieved

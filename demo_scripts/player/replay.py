@@ -187,6 +187,8 @@ class ReplayPlayer:
         self._half_beat = False  # True = prompt shown, waiting for "enter" press
         self._in_fullscreen = False  # True = vi-style full-pane takeover active
         self._awaiting_approval = False  # True = paused mid-stream on an approval dialog
+        self._note_beat_idx = 0  # which beat's notes to show; lags _beat_idx so the
+                                  # card stays on the just-finished beat while paused
 
         # Layout
         self._left_w = 72
@@ -384,7 +386,7 @@ class ReplayPlayer:
                 ],
             }
         else:
-            note_key = self.beats[beat_idx]["label"]
+            note_key = self.beats[self._note_beat_idx]["label"]
             note = self.notes.get(note_key, {})
         right_lines = render_note(note, self._right_w, self.color)
 
@@ -565,6 +567,7 @@ class ReplayPlayer:
         try:
             self._compute_layout()
             self._beat_idx = start
+            self._note_beat_idx = start
             self._line_buf = self._rebuild_line_buf(start)
             self._scroll_offset = 0
             self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
@@ -585,13 +588,17 @@ class ReplayPlayer:
                         # fragments (usually none), advance to the next beat.
                         self._in_fullscreen = False
                         self._scroll_offset = 0
+                        self._note_beat_idx = self._beat_idx  # note card stays on this beat while it streams
                         self._stream_beat_frags(self._beat_idx, self._line_buf)
                         self._beat_idx += 1
                         self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
                     elif self._beat_idx < len(self.beats):
                         beat = self.beats[self._beat_idx]
                         if beat.get("prompt") and not self._half_beat:
-                            # First press: type out the prompt character by character,
+                            # First press: flip the note card to this beat so the
+                            # presenter sees the upcoming context while typing.
+                            self._note_beat_idx = self._beat_idx
+                            # Type out the prompt character by character,
                             # wrapping inside the left pane (never off-screen).
                             prefix = beat.get("prefix", "  > ")
                             # 35ms per char regardless of speed (feels like fast human
@@ -647,6 +654,7 @@ class ReplayPlayer:
                             # Second press (or beat has no prompt): stream fragments
                             self._half_beat = False
                             self._scroll_offset = 0
+                            self._note_beat_idx = self._beat_idx  # keep note on this beat while streaming
                             self._stream_beat_frags(self._beat_idx, self._line_buf)
                             self._beat_idx += 1
                             self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
@@ -665,10 +673,12 @@ class ReplayPlayer:
                         # several lines, so rebuild cleanly rather than popping a fixed count.
                         self._half_beat = False
                         self._scroll_offset = 0
+                        self._note_beat_idx = self._beat_idx  # restore note to this beat's preview
                         self._line_buf = self._rebuild_line_buf(self._beat_idx)
                         self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)
                     else:
                         self._beat_idx = max(0, self._beat_idx - 1)
+                        self._note_beat_idx = self._beat_idx  # show the beat we backed up to
                         self._scroll_offset = 0
                         self._line_buf = self._rebuild_line_buf(self._beat_idx)
                         self._repaint(self._beat_idx, self._line_buf, self._scroll_offset)

@@ -376,18 +376,8 @@ class ReplayPlayer:
         hdr_padded = self._pad(c(hdr, "dim"), cols)
 
         # --- Right-pane note (still shown during a fullscreen takeover) ---
-        if at_end:
-            note = {
-                "headline": "Demo complete",
-                "bullets": [
-                    "All beats played.",
-                    "← left arrow to step back through any beat.",
-                    "q to quit.",
-                ],
-            }
-        else:
-            note_key = self.beats[self._note_beat_idx]["label"]
-            note = self.notes.get(note_key, {})
+        note_key = self.beats[self._note_beat_idx]["label"]
+        note = self.notes.get(note_key, {})
         right_lines = render_note(note, self._right_w, self.color)
 
         # --- Left-pane content ---

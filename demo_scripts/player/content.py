@@ -552,8 +552,6 @@ ACT2_PLAN = [
          "refunds. Must be within 90 days — older returns HTTP 422."),
     line("- sess-005-fact-0: All money stored as integer cents in DB. The amount input from "
          "the customer is a dollar string, converted at the boundary."),
-    line("- Wn9ktp4BniyjIMohO9V5: Idempotency key is a per-attempt UUID (refund-{uuid4}), "
-         "NOT order+amount based."),
     line("- sess-007-fact-0: Exponential backoff, max 3 retries, ±20% jitter — already in "
          "_with_backoff."),
     blank(),

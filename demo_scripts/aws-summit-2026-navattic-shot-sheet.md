@@ -20,7 +20,7 @@ tags: [aws-summit-2026, navattic, demo, elastic-bedrock-memory, shot-sheet]
 **Narrative spine:** One task — *add a refund endpoint* — built **clean but policy-blind** without memory (Act 1), the memory system **built live** in front of the audience, **wired** to Kiro, then the same task built **right** with memory (Act 2). Cross-session read-back and Kibana audit trail close it out.
 
 ### Kibana (Agent Builder):
-https://bedrock-memory-demo-e86908.kb.us-east-1.aws.elastic.cloud
+https://YOUR-DEPLOYMENT-ID.kb.us-east-1.aws.elastic.cloud
 
 ### Kiro:
 Kiro launched from `~/repos/checkout-service-demo`. For Act 1 (Scene 2): stock agent, no elastic-memory in mcp.json. For Act 2 (Scene 5): checkout-memory agent active, elastic-memory wired.

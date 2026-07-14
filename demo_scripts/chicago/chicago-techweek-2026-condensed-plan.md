@@ -97,7 +97,7 @@ Live, the 60-min-scripted talk actually ran **~52 min** — 8 min short — and 
 
 ## Slide deck
 
-Built — Elastic-branded (not AWS), 10 slides, matches the run-of-show above. See `demo_scripts/chicago-techweek-2026-slides-handoff.md` for the slide inventory, notes, and what's still open.
+Built — Elastic-branded (not AWS), 10 slides, matches the run-of-show above. See `chicago-techweek-2026-slides-handoff.md` for the slide inventory, notes, and what's still open.
 
 Deck: https://docs.google.com/presentation/d/1UvBedVZ0tSn-NsB2GcBukrGdWCH0UB6fAVlU44Yv-fQ/edit
 

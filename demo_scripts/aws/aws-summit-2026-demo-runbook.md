@@ -31,7 +31,7 @@ memory-wired Kiro (Act 2), with the memory system **built live** in between.
   **elicit** them and how to **fall back** to a known-good capture if live Kiro
   behaves differently. It's recorded footage — re-run until the take is right.
 - Reference implementations of both the **wrong** and **correct** refund code live
-  in `demo_scripts/reference/`. Use them to verify a take captured the right slips,
+  in `../reference/`. Use them to verify a take captured the right slips,
   or paste them in if a live run underperforms.
 
 ---
@@ -166,7 +166,7 @@ live only in team decisions, never in the code.
 | Refund model, async session | (and it states the key choice *confidently* in a comment — wrong, but sure of itself) |
 
 You don't need to "elicit" anything — a good agent exhibits all three gaps naturally.
-Verify the take against `demo_scripts/reference/refunds-amnesiac.py`.
+Verify the take against `../reference/refunds-amnesiac.py`.
 
 ### The correction beats (Jeff feeds the policy from his own memory)
 

@@ -12,7 +12,7 @@ tags: [aws-summit-2026, navattic, demo, elastic-bedrock-memory, shot-sheet]
 # AWS Summit NYC 2026 — Navattic Shot Sheet
 
 **Recording target:** Click-through demo for "From Stateless to Stateful" session
-**Source of truth:** `demo_scripts/aws-summit-2026-demo-runbook.md` (run-book wins on all conflicts)
+**Source of truth:** `aws-summit-2026-demo-runbook.md` (run-book wins on all conflicts)
 **Repo:** `github.com/jeffvestal/elastic-bedrock-memory`
 **Total shots:** ~35 steps across 8 scenes
 **Demo runtime:** ~12 minutes in Navattic
@@ -74,7 +74,7 @@ See run-book **State matrix** section for what must be true per segment before p
 
 **Purpose:** Show that a capable Kiro reads the repo and gets code patterns right — but is completely blind to the team's refund policy, which lives only in memory.
 **State:** Stock Kiro agent. `elastic-memory` NOT in mcp.json. Codebase at baseline (`git checkout .`). Launched from `~/repos/checkout-service-demo/`.
-**Note:** Don't wait for Kiro to write buggy code — it won't. The gaps are policy gaps, not code-quality gaps. Verify take against `demo_scripts/reference/refunds-amnesiac.py`.
+**Note:** Don't wait for Kiro to write buggy code — it won't. The gaps are policy gaps, not code-quality gaps. Verify take against `../reference/refunds-amnesiac.py`.
 
 ### What Kiro gets right vs. the gaps
 
@@ -202,7 +202,7 @@ See run-book **Reset procedures between takes** for exact commands. Summary:
 
 | Scene | Reset | Note |
 |-------|-------|------|
-| 2 — Act 1 | `git -C ~/repos/checkout-service-demo checkout .`; fresh stock Kiro session | Verify policy gaps (no cap, no window, amount-based key) against `demo_scripts/reference/refunds-amnesiac.py` |
+| 2 — Act 1 | `git -C ~/repos/checkout-service-demo checkout .`; fresh stock Kiro session | Verify policy gaps (no cap, no window, amount-based key) against `../reference/refunds-amnesiac.py` |
 | 3 — Live-build | `python3 setup/demo-setup.py --clean` | Empty Elastic — scripts must show *creation*, not "already exists" |
 | 4 — Wire memory | `python3 setup/demo-setup.py --prep`, restart Kiro | Removes elastic-memory from mcp.json |
 | 5 — Act 2 | `git checkout .` in codebase; `--reset` if stray fact saved; fresh session | Must be baseline — refunds must not already exist from Act 1 |

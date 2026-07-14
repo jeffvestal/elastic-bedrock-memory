@@ -43,9 +43,9 @@ These beats are from the real 2026-06-11 Kiro session capture. Content is exact.
 
 ## How to Slot In a Real Capture
 
-1. Run `python3 demo_scripts/player/replay.py --list` to confirm beat numbers.
-2. Edit `demo_scripts/player/content.py` — find the beat's `fragments` list and replace reconstructed fragments with real output using `line()`, `tool()`, `write()`, `code()` etc.
-3. Run `python3 demo_scripts/player/selftest.py` — must stay 16/16.
-4. Visual pass: `python3 demo_scripts/player/replay.py --from-beat <N>`.
+1. Run `python3 ../player/replay.py --list` to confirm beat numbers.
+2. Edit `../player/content.py` — find the beat's `fragments` list and replace reconstructed fragments with real output using `line()`, `tool()`, `write()`, `code()` etc.
+3. Run `python3 ../player/selftest.py` — must stay 16/16.
+4. Visual pass: `python3 ../player/replay.py --from-beat <N>`.
 
 For Act 1 specifically: mirror how `ACT2_SEARCH`, `ACT2_PLAN`, etc. are structured in `content.py`. The placeholder is `REPLAY_BEATS[0]` with label `act1-placeholder`.

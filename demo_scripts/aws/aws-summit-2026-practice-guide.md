@@ -276,7 +276,7 @@ Don't re-narrate the demo. The audience just watched it.
 
 ### Segment 8: FAQ-as-Content (~6 min)
 
-The full scripts for each question live in `demo_scripts/aws-summit-2026-faq.md`. These run as slides. Expand or contract to fill remaining time after Act 3.
+The full scripts for each question live in `aws-summit-2026-faq.md`. These run as slides. Expand or contract to fill remaining time after Act 3.
 
 The six questions, in order:
 1. "I don't use Kiro — does this work with my IDE or agent?"

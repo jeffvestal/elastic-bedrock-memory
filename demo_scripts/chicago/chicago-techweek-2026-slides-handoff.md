@@ -3,7 +3,7 @@
 **Deck:** https://docs.google.com/presentation/d/1UvBedVZ0tSn-NsB2GcBukrGdWCH0UB6fAVlU44Yv-fQ/edit
 **Template:** Elastic official brand template (`1fcpLW-I4WPNvatVx1jNPfFaYPlw6aKahiFfsB7CHcaE`) — NOT the AWS-themed deck used for the original talk
 **Slide count:** 10 slides
-**Built from:** `demo_scripts/chicago-techweek-2026-condensed-plan.md` run-of-show
+**Built from:** `chicago-techweek-2026-condensed-plan.md` run-of-show
 
 ---
 
@@ -22,7 +22,7 @@
 | 9 | g3d80320b934_0_2108 | Build This Yourself | CTA steps | 1 min |
 | 10 | g32b87f81189_3_36 | Thank you! | Closing | — |
 
-All slides have speaker notes matching `demo_scripts/chicago-techweek-2026-condensed-plan.md` timing. Slide 8's notes flag it explicitly as the flex point — cut first if running long, expand first if running short.
+All slides have speaker notes matching `chicago-techweek-2026-condensed-plan.md` timing. Slide 8's notes flag it explicitly as the flex point — cut first if running long, expand first if running short.
 
 ---
 

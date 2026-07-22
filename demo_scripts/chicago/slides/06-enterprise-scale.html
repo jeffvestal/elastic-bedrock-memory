@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise Memory at Scale</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .intro-line {
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1.5;
+      max-width: 820px;
+      color: var(--black);
+      opacity: 0.75;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 16px;
+      width: 1120px;
+    }
+
+    .req-card {
+      background: #fff;
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .req-card.fill-yellow {
+      background: var(--yellow);
+    }
+
+    .req-card .card-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      opacity: 0.45;
+    }
+
+    .req-card p {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--black);
+      margin: 0;
+    }
+
+    .req-card .card-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .callout-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--black);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .callout-bar span {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--yellow);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 72px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid var(--black);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+
+    .meta-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.35;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+
+    <!-- Meta label -->
+    <div style="position: absolute; top: 44px; left: 80px;" class="reveal d1">
+      <span class="meta-label">[ SECTION_06 ]</span>
+    </div>
+
+    <!-- H2 heading -->
+    <div style="position: absolute; top: 80px; left: 80px;" class="reveal d2">
+      <h2 style="font-size: 40px; font-weight: 800; letter-spacing: -0.025em; color: var(--black); margin: 0;">Enterprise Memory at Scale</h2>
+    </div>
+
+    <!-- Intro line -->
+    <div style="position: absolute; top: 142px; left: 80px;" class="reveal d3">
+      <p class="intro-line">Your agents will interact across thousands of sessions and millions of turns — all on the same project.</p>
+    </div>
+
+    <!-- 2x2 card grid -->
+    <div style="position: absolute; top: 212px; left: 80px;" class="card-grid reveal d4">
+
+      <!-- Card 1 -->
+      <div class="req-card">
+        <span class="card-num">[ 01 ]</span>
+        <p>Persists across sessions, machines, and team members</p>
+      </div>
+
+      <!-- Card 2 — yellow highlight -->
+      <div class="req-card fill-yellow">
+        <span class="card-num">[ 02 ]</span>
+        <p>Can be queried semantically: "what auth approach did we decide on?"</p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="req-card">
+        <span class="card-num">[ 03 ]</span>
+        <p>Scales to millions of stored interactions without degrading</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="req-card">
+        <span class="card-num">[ 04 ]</span>
+        <p>Observable, debuggable, and auditable</p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer reveal d5">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+    <!-- Callout bar -->
+    <div class="callout-bar reveal d6">
+      <span>Context windows aren't memory. Elasticsearch is.</span>
+    </div>
+
+  </div>
+
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

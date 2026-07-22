@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1280" />
+  <title>Memory-as-a-Service</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .geo-block {
+      position: absolute;
+      border: 2.5px solid var(--black);
+      box-shadow: 6px 6px 0 var(--black);
+      background: var(--cream);
+    }
+
+    .geo-block-lg {
+      width: 220px;
+      height: 220px;
+      top: 80px;
+      right: 120px;
+    }
+
+    .geo-block-sm {
+      width: 80px;
+      height: 80px;
+      bottom: 120px;
+      right: 200px;
+    }
+
+    .geo-bar {
+      position: absolute;
+      background: var(--black);
+      width: 6px;
+      height: 320px;
+      left: 96px;
+      top: 200px;
+    }
+
+    .act-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      color: var(--black);
+    }
+
+    .main-h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 96px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 0.92;
+      color: var(--black);
+      position: absolute;
+      left: 120px;
+      top: 220px;
+      width: 780px;
+    }
+
+    .kicker-box {
+      position: absolute;
+      left: 120px;
+      top: 160px;
+    }
+
+    .corner-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: var(--black);
+      border-radius: 0;
+    }
+
+    .dot-tl { top: 80px; left: 220px; }
+    .dot-br { bottom: 80px; right: 440px; }
+
+    .bottom-rule {
+      position: absolute;
+      bottom: 80px;
+      left: 120px;
+      width: 500px;
+      height: 2.5px;
+      background: var(--black);
+    }
+
+    .sub-label {
+      position: absolute;
+      bottom: 94px;
+      left: 120px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      color: var(--black);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-yellow">
+
+    <!-- Vertical black bar accent -->
+    <div class="geo-bar reveal d1"></div>
+
+    <!-- Section label -->
+    <div class="kicker-box reveal d1">
+      <span class="act-label">[ ACT_02 ]</span>
+    </div>
+
+    <!-- Main heading -->
+    <h1 class="main-h1 reveal d2">Memory-<br>as-a-<br>Service</h1>
+
+    <!-- Large geometric hard-box -->
+    <div class="geo-block geo-block-lg reveal d3"></div>
+
+    <!-- Small geometric hard-box -->
+    <div class="geo-block geo-block-sm reveal d4"></div>
+
+    <!-- Corner dots -->
+    <div class="corner-dot dot-tl reveal d2"></div>
+    <div class="corner-dot dot-br reveal d4"></div>
+
+    <!-- Bottom rule + sub-label -->
+    <div class="bottom-rule reveal d3"></div>
+    <span class="sub-label reveal d3">Architecting persistent agent memory</span>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

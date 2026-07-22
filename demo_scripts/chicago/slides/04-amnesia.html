@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Every AI Agent Starts with Amnesia</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .slide-04 {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meta-tag {
+      position: absolute;
+      top: 48px;
+      left: 64px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.35;
+      color: var(--black);
+    }
+
+    .left-col {
+      position: absolute;
+      top: 0;
+      left: 64px;
+      width: 580px;
+      height: 720px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      margin-bottom: 20px;
+      color: var(--black);
+    }
+
+    .slide-title {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      color: var(--black);
+      margin: 0 0 32px 0;
+    }
+
+    .slide-title em {
+      font-style: normal;
+      position: relative;
+      display: inline-block;
+    }
+
+    .slide-title em::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: var(--yellow);
+      z-index: -1;
+    }
+
+    .body-copy {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--black);
+      opacity: 0.85;
+      max-width: 520px;
+    }
+
+    .body-copy strong {
+      font-weight: 700;
+      opacity: 1;
+      color: var(--black);
+    }
+
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: var(--black);
+      margin-bottom: 28px;
+    }
+
+    /* Right column — zero visual */
+    .right-col {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 580px;
+      height: 720px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .zero-bg {
+      font-size: 480px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: transparent;
+      -webkit-text-stroke: 3px rgba(17, 17, 17, 0.12);
+      line-height: 1;
+      user-select: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .stat-stack {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 2;
+    }
+
+    .stat-card {
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      background: white;
+      padding: 16px 24px;
+      width: 240px;
+    }
+
+    .stat-card.fill-yellow {
+      background: var(--yellow);
+    }
+
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--black);
+      line-height: 1;
+    }
+
+    .vert-label {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+      transform-origin: center center;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.2;
+      white-space: nowrap;
+      color: var(--black);
+    }
+
+    .callout-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--black);
+      color: var(--yellow);
+      padding: 14px 64px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 28px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid var(--black);
+      display: flex;
+      justify-content: space-between;
+      padding-top: 10px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      color: var(--black);
+    }
+
+    /* vertical divider between cols */
+    .col-divider {
+      position: absolute;
+      top: 80px;
+      bottom: 80px;
+      left: 660px;
+      width: 2px;
+      background: var(--black);
+      opacity: 0.1;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide slide-04">
+
+    <span class="meta-tag reveal d1">[ PROBLEM_STATEMENT ]</span>
+
+    <div class="col-divider"></div>
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+      <div class="eyebrow reveal d2">The Core Problem</div>
+      <h2 class="slide-title reveal d3">Every AI Agent<br>Starts with <em>Amnesia</em></h2>
+      <div class="divider reveal d4"></div>
+      <p class="body-copy reveal d5">
+        By default, AI agents are <strong>stateless</strong>. Each conversation begins at zero. Your agent has no memory of what it built yesterday, what decisions were made last sprint, or why the team chose Aurora PostgreSQL.<br><br>
+        The common workaround — <strong>stuffing everything into the context window</strong> — breaks at enterprise scale. It's slow. It's expensive. And it still has a ceiling.
+      </p>
+    </div>
+
+    <!-- RIGHT COLUMN — zero visual -->
+    <div class="right-col">
+      <div class="zero-bg reveal d2">0</div>
+
+      <div class="stat-stack">
+        <div class="stat-card fill-yellow reveal d4">
+          <div class="stat-label">Agent memory at start</div>
+          <div class="stat-value">Zero</div>
+        </div>
+        <div class="stat-card reveal d5">
+          <div class="stat-label">Context window ceiling</div>
+          <div class="stat-value">Hard limit</div>
+        </div>
+        <div class="stat-card reveal d6">
+          <div class="stat-label">Cost of naive RAG at scale</div>
+          <div class="stat-value">Compounding</div>
+        </div>
+      </div>
+    </div>
+
+    <span class="vert-label reveal d2">Stateless · Forgetful · Expensive</span>
+
+    <!-- FOOTER -->
+    <div class="footer reveal d7">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

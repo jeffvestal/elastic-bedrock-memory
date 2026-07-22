@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Context Window Trap</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .layout {
+      position: absolute;
+      inset: 0;
+      padding: 56px 72px 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    /* 5-card grid — intentionally slightly asymmetric */
+    .trap-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      flex: 1;
+    }
+
+    .trap-card {
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      background: var(--white);
+      padding: 16px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+
+    /* One card gets yellow fill — postmodern accent */
+    .trap-card.highlight {
+      background: var(--yellow);
+    }
+
+    .trap-card .num {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.35;
+    }
+
+    .trap-card h3 {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .trap-card p {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #444;
+      margin-top: auto;
+    }
+    .trap-card.highlight p { color: var(--black); }
+
+    /* Stat callout inside card */
+    .stat {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--black);
+    }
+    .stat .unit {
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0.5;
+      letter-spacing: 0.04em;
+    }
+
+    /* Bottom callout bar */
+    .callout-bar {
+      border: 2.5px solid var(--black);
+      box-shadow: 5px 5px 0 var(--black);
+      background: var(--black);
+      color: var(--yellow);
+      padding: 13px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .callout-bar .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      white-space: nowrap;
+    }
+    .callout-bar p {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--white);
+    }
+    .callout-bar p em { color: var(--yellow); font-style: normal; }
+
+    /* Decorative circle top-right */
+    .deco-circle {
+      position: absolute;
+      top: 52px; right: 64px;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 3px solid var(--black);
+      background: var(--yellow);
+      box-shadow: 3px 3px 0 var(--black);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div class="deco-circle"></div>
+
+    <div class="layout">
+      <div class="header-row">
+        <div>
+          <div class="eyebrow reveal d1" style="opacity:0.4; margin-bottom:6px;">[ PROBLEM_02 ]</div>
+          <h2 class="reveal d2">The Context Window Trap</h2>
+        </div>
+        <span class="meta-label reveal d1">5 reasons it doesn't scale</span>
+      </div>
+
+      <div class="trap-grid">
+        <div class="trap-card highlight reveal d2">
+          <span class="num">01 · Cost</span>
+          <div class="stat">100×<span class="unit"> more</span></div>
+          <h3>Per Query</h3>
+          <p>1M-token context vs. a targeted retrieval. You pay for every token re-read every turn.</p>
+        </div>
+
+        <div class="trap-card reveal d3">
+          <span class="num">02 · Latency</span>
+          <h3>Bigger = Slower</h3>
+          <p>Large contexts slow inference. Your agent waits while the model re-processes noise.</p>
+        </div>
+
+        <div class="trap-card reveal d3">
+          <span class="num">03 · Signal</span>
+          <div class="stat" style="font-size:26px;">95%</div>
+          <h3>Is Irrelevant</h3>
+          <p>You stuffed the whole codebase in. The model still pays to process all of it.</p>
+        </div>
+
+        <div class="trap-card reveal d4">
+          <span class="num">04 · Persistence</span>
+          <h3>Disappears on Close</h3>
+          <p>Session ends → context gone. Tomorrow your agent starts at zero. Again.</p>
+        </div>
+
+        <div class="trap-card reveal d4">
+          <span class="num">05 · Structure</span>
+          <h3>Can't Be Queried</h3>
+          <p>A flat wall of text has no index. "What did we decide about auth?" returns nothing precise.</p>
+        </div>
+      </div>
+
+      <div class="callout-bar reveal d5">
+        <span class="label">Verdict</span>
+        <p>Making the context window <em>bigger</em> is a stopgap. Agents need a <em>queryable, persistent store</em>.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

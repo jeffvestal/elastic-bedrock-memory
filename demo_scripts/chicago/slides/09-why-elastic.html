@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why Elasticsearch for Agent Memory</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .slide-eyebrow {
+      position: absolute;
+      top: 52px;
+      left: 64px;
+    }
+
+    .slide-heading {
+      position: absolute;
+      top: 80px;
+      left: 64px;
+      right: 64px;
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: var(--black);
+      margin: 0;
+    }
+
+    .opening-statement {
+      position: absolute;
+      top: 148px;
+      left: 64px;
+      right: 64px;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.55;
+      color: var(--black);
+      opacity: 0.72;
+      margin: 0;
+      max-width: 860px;
+    }
+
+    .cap-grid {
+      position: absolute;
+      top: 210px;
+      left: 64px;
+      right: 64px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 14px;
+    }
+
+    .cap-item {
+      background: #fff;
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .cap-item.fill-yellow {
+      background: var(--yellow);
+    }
+
+    .cap-item.span-full {
+      grid-column: 1 / -1;
+    }
+
+    .cap-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      color: var(--black);
+    }
+
+    .cap-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      color: var(--black);
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .cap-desc {
+      font-size: 13.5px;
+      font-weight: 400;
+      color: var(--black);
+      opacity: 0.7;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .stack-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stack-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--black);
+      border-radius: 0;
+      flex-shrink: 0;
+    }
+
+    .callout-bar {
+      position: absolute;
+      bottom: 56px;
+      left: 64px;
+      right: 64px;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .callout-bar::before {
+      content: '[ VERDICT ]';
+      opacity: 0.5;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      flex-shrink: 0;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 28px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid var(--black);
+      display: flex;
+      justify-content: space-between;
+      padding-top: 8px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      color: var(--black);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+
+    <span class="eyebrow slide-eyebrow reveal d1">[ INFRASTRUCTURE ]</span>
+
+    <h2 class="slide-heading reveal d2">Why Elasticsearch for Agent Memory?</h2>
+
+    <p class="opening-statement reveal d3">
+      Elasticsearch is where enterprise data already lives — logs, docs, vectors, structured records.
+    </p>
+
+    <div class="cap-grid">
+
+      <div class="cap-item reveal d4">
+        <span class="cap-label">01 · Retrieval</span>
+        <p class="cap-title">Dense Vector Search</p>
+        <p class="cap-desc">k-NN with HNSW. Millisecond recall at scale — no separate vector database required.</p>
+      </div>
+
+      <div class="cap-item fill-yellow reveal d5">
+        <span class="cap-label">02 · Recall Quality</span>
+        <p class="cap-title">Hybrid Search</p>
+        <p class="cap-desc">BM25 + semantic vectors combined. Highest recall quality across keyword and meaning.</p>
+      </div>
+
+      <div class="cap-item reveal d6">
+        <span class="cap-label">03 · Ingest</span>
+        <p class="cap-title">semantic_text Field</p>
+        <p class="cap-desc">Auto-embedding at ingest time. Zero embedding pipeline to build, deploy, or operate.</p>
+      </div>
+
+      <div class="cap-item reveal d7">
+        <span class="cap-label">04 · Query</span>
+        <p class="cap-title">ES|QL</p>
+        <p class="cap-desc">Filter, aggregate, and query vector results with SQL-like syntax. Agents can reason over data directly.</p>
+      </div>
+
+      <div class="cap-item span-full reveal d8">
+        <div class="stack-badge">
+          <div class="stack-dot"></div>
+          <span class="cap-label" style="opacity: 1; letter-spacing: 0.15em;">05 · Operational Reality</span>
+        </div>
+        <p class="cap-title">Already in Your Stack</p>
+        <p class="cap-desc" style="opacity: 0.65;">No new infrastructure to provision or operate. Memory lives where your data already lives — one platform, one API, one place to search everything.</p>
+      </div>
+
+    </div>
+
+    <div class="footer reveal d9">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

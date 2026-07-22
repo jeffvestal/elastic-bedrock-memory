@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Same Prompt, Four Acts</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .slide-eyebrow {
+      position: absolute;
+      top: 52px;
+      left: 64px;
+    }
+
+    .slide-h2 {
+      position: absolute;
+      top: 76px;
+      left: 64px;
+      margin: 0;
+    }
+
+    .acts-row {
+      position: absolute;
+      left: 48px;
+      right: 48px;
+      top: 168px;
+      bottom: 80px;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .act-card {
+      flex: 1;
+      border: 2.5px solid var(--black);
+      box-shadow: 6px 6px 0 var(--black);
+      background: #fff;
+      padding: 26px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .act-card.fill-yellow {
+      background: var(--yellow);
+    }
+
+    .act-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.32em;
+      opacity: 0.45;
+      margin-bottom: 14px;
+    }
+
+    .act-label {
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .act-body {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.55;
+      color: #222;
+      flex: 1;
+    }
+
+    .act-verdict {
+      margin-top: 18px;
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding: 5px 10px;
+      border: 2px solid var(--black);
+      box-shadow: 2px 2px 0 var(--black);
+      border-radius: 4px;
+      align-self: flex-start;
+    }
+
+    .act-verdict.bad {
+      border-color: var(--poppy);
+      box-shadow: 2px 2px 0 var(--poppy);
+      color: var(--poppy);
+    }
+
+    .act-verdict.good {
+      background: var(--black);
+      color: var(--yellow);
+      border-color: var(--black);
+    }
+
+    .act-verdict.neutral {
+      background: transparent;
+      color: var(--black);
+    }
+
+    /* Arrow connector between acts */
+    .connector-arrow {
+      flex-shrink: 0;
+      width: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .connector-arrow span {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--black);
+      line-height: 1;
+    }
+
+    /* Load Memory special section */
+    .load-section {
+      flex-shrink: 0;
+      width: 148px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      padding: 0 4px;
+    }
+
+    .load-pill {
+      border: 2.5px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      border-radius: 999px;
+      background: var(--black);
+      color: var(--yellow);
+      padding: 12px 18px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      text-align: center;
+      line-height: 1.5;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .load-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      opacity: 0.45;
+      text-align: center;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    .load-tick {
+      width: 2px;
+      height: 20px;
+      background: var(--black);
+      margin: 0 auto 6px;
+    }
+
+    .load-tick.bottom {
+      margin: 6px auto 0;
+    }
+
+    /* Payoff badge on Act 2 */
+    .payoff-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: var(--black);
+      color: var(--yellow);
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+
+    <span class="eyebrow slide-eyebrow reveal d1">[ The Demo Arc ]</span>
+    <h2 class="slide-h2 reveal d2">Same Prompt. Four Acts.</h2>
+
+    <div class="acts-row">
+
+      <!-- ACT 01 -->
+      <div class="act-card reveal d3">
+        <div class="act-num">[ ACT 01 ]</div>
+        <div class="act-label">Agent Without Memory</div>
+        <div class="act-body">
+          Same codebase, same task. The agent writes the refund endpoint — and gets it wrong. Float math. No idempotency key. No JWT auth. Every mistake the team already solved.
+        </div>
+        <span class="act-verdict bad">✕ Built Wrong</span>
+      </div>
+
+      <!-- Connector arrow -->
+      <div class="connector-arrow reveal d4">
+        <span>→</span>
+      </div>
+
+      <!-- LOAD MEMORY transition -->
+      <div class="load-section reveal d4">
+        <div class="load-tick"></div>
+        <div class="load-pill">Load the Memory<br>2 weeks of<br>team decisions</div>
+        <div class="load-tick bottom"></div>
+        <div class="load-sub">Elastic<br>indexes it all</div>
+      </div>
+
+      <!-- Connector arrow -->
+      <div class="connector-arrow reveal d4">
+        <span>→</span>
+      </div>
+
+      <!-- ACT 02 — THE PAYOFF -->
+      <div class="act-card fill-yellow reveal d5">
+        <div class="payoff-badge">The Payoff</div>
+        <div class="act-num">[ ACT 02 ]</div>
+        <div class="act-label">Agent With Memory</div>
+        <div class="act-body">
+          Verbatim prompt. The agent queries Elastic first — surfaces every decision — then writes the refund endpoint correctly. First pass. No corrections needed.
+        </div>
+        <span class="act-verdict good">✓ Built Right, First Pass</span>
+      </div>
+
+      <!-- Connector arrow -->
+      <div class="connector-arrow reveal d6">
+        <span>→</span>
+      </div>
+
+      <!-- ACT 03 -->
+      <div class="act-card reveal d6">
+        <div class="act-num">[ ACT 03 ]</div>
+        <div class="act-label">New Teammate, New Session</div>
+        <div class="act-body">
+          Fresh context. Different developer. One query — the complete refund policy and every rationale behind it surfaces instantly. Memory outlives the session.
+        </div>
+        <span class="act-verdict neutral">Institutional Memory Lives</span>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

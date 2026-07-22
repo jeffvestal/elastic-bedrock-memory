@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Recall to Self-Improving Agents</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .slide-content {
+      position: absolute;
+      top: 72px;
+      left: 64px;
+      right: 64px;
+    }
+
+    .slide-h2 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--black);
+      margin: 0 0 48px 0;
+    }
+
+    .progression {
+      position: absolute;
+      top: 160px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .prog-step {
+      flex: 1;
+      background: #fff;
+      border: 2.5px solid var(--black);
+      box-shadow: 6px 6px 0 var(--black);
+      padding: 28px 28px 32px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .prog-step.step-future {
+      background: var(--yellow);
+    }
+
+    .prog-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .prog-arrow::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 2.5px;
+      background: var(--black);
+      transform: translateY(-50%);
+    }
+
+    .prog-arrow::after {
+      content: '';
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-left: 12px solid var(--black);
+    }
+
+    .step-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      margin-bottom: 4px;
+    }
+
+    .step-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--black);
+      border-bottom: 2px solid var(--black);
+      padding-bottom: 10px;
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--black);
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    .step-desc {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--black);
+      line-height: 1.5;
+      margin: 0;
+      opacity: 0.75;
+    }
+
+    .step-future .step-desc {
+      opacity: 0.85;
+    }
+
+    .step-icon {
+      font-family: 'Space Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--black);
+      opacity: 0.15;
+      position: absolute;
+      bottom: 20px;
+      right: 24px;
+    }
+
+    .step-future .step-icon {
+      opacity: 0.2;
+    }
+
+    .takeaway-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .callout-bar {
+      background: var(--black);
+      color: var(--yellow);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 14px 64px;
+      text-align: center;
+    }
+
+    .meta-label-top {
+      position: absolute;
+      top: 24px;
+      right: 64px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.35;
+      color: var(--black);
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 58px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid var(--black);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      color: var(--black);
+    }
+
+    .vert-label {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateX(-50%) rotate(-90deg);
+      transform-origin: center center;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.2;
+      color: var(--black);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <span class="meta-label-top">[ SECTION_04 / ROADMAP ]</span>
+    <span class="vert-label">Evolution of Memory</span>
+
+    <div class="slide-content">
+      <div class="eyebrow reveal d1">What comes next</div>
+      <h2 class="slide-h2 reveal d2">From Recall to Self-Improving Agents</h2>
+    </div>
+
+    <div class="progression">
+      <!-- Step 1: Today -->
+      <div class="prog-step reveal d3">
+        <div class="step-meta">[ STAGE_01 ]</div>
+        <div class="step-label">Today</div>
+        <div class="step-title">Agent reads.<br>Human writes.</div>
+        <div class="step-desc">The agent retrieves past decisions on demand. Developers manually save facts worth keeping.</div>
+        <span class="step-icon">01</span>
+      </div>
+
+      <div class="prog-arrow reveal d4"></div>
+
+      <!-- Step 2: Next -->
+      <div class="prog-step reveal d5">
+        <div class="step-meta">[ STAGE_02 ]</div>
+        <div class="step-label">Next</div>
+        <div class="step-title">Agent observes.<br>Agent writes.</div>
+        <div class="step-desc">After each task, the agent logs its own outcomes — what worked, what failed, what it would do differently.</div>
+        <span class="step-icon">02</span>
+      </div>
+
+      <div class="prog-arrow reveal d6"></div>
+
+      <!-- Step 3: Future -->
+      <div class="prog-step step-future reveal d7">
+        <div class="step-meta">[ STAGE_03 ]</div>
+        <div class="step-label">Future</div>
+        <div class="step-title">Many agents.<br>One store.</div>
+        <div class="step-desc">A fleet shares one memory index. Institutional knowledge no single run could ever hold — available to every agent, every session.</div>
+        <span class="step-icon">03</span>
+      </div>
+    </div>
+
+    <div class="footer reveal d8">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+    <div class="takeaway-bar reveal d9">
+      <div class="callout-bar">
+        Memory turns agents from stateless tools into compounding systems
+      </div>
+    </div>
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

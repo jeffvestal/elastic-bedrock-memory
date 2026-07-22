@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory-as-a-Service Architecture</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .slide-title {
+      position: absolute;
+      top: 52px;
+      left: 64px;
+      right: 64px;
+      color: #fff;
+    }
+
+    .note-bar {
+      position: absolute;
+      top: 130px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .note-bar .note-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .note-bar .note-divider {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* Flow diagram */
+    .flow-container {
+      position: absolute;
+      top: 188px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .flow-box {
+      border: 2.5px solid rgba(255,255,255,0.85);
+      box-shadow: 4px 4px 0 rgba(255,255,255,0.25);
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 180px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .flow-box.yellow-box {
+      border-color: #FEC514;
+      box-shadow: 4px 4px 0 #FEC514;
+      background: rgba(254,197,20,0.08);
+    }
+
+    .flow-box .box-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .flow-box.yellow-box .box-label {
+      color: rgba(254,197,20,0.7);
+    }
+
+    .flow-box .box-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .flow-box.yellow-box .box-name {
+      color: #FEC514;
+    }
+
+    .flow-box .box-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      letter-spacing: 0.08em;
+    }
+
+    .flow-box.yellow-box .box-sub {
+      color: rgba(254,197,20,0.55);
+    }
+
+    /* Arrow between boxes */
+    .arrow-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      padding: 0 4px;
+    }
+
+    .arrow-line {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 0;
+    }
+
+    .arrow-shaft {
+      flex: 1;
+      height: 2px;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-left: 10px solid rgba(255,255,255,0.3);
+      flex-shrink: 0;
+    }
+
+    .arrow-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Middle section: Agent Builder with protocol label */
+    .protocol-pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    /* Engine row inside agent builder */
+    .engine-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-top: 4px;
+    }
+
+    /* Indices row */
+    .indices-container {
+      position: absolute;
+      top: 408px;
+      left: 64px;
+      right: 64px;
+    }
+
+    .indices-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(254,197,20,0.6);
+      margin-bottom: 14px;
+    }
+
+    .indices-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .index-box {
+      flex: 1;
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 3px 3px 0 rgba(255,255,255,0.1);
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .index-box .idx-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+
+    .index-box .idx-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: -0.01em;
+    }
+
+    .index-box .idx-desc {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 5px;
+      letter-spacing: 0.05em;
+    }
+
+    .index-box.fill-yellow-dim {
+      border-color: #FEC514;
+      box-shadow: 3px 3px 0 #FEC514;
+      background: rgba(254,197,20,0.06);
+    }
+
+    .index-box.fill-yellow-dim .idx-label {
+      color: rgba(254,197,20,0.55);
+    }
+
+    .index-box.fill-yellow-dim .idx-name {
+      color: #FEC514;
+    }
+
+    /* Down-connector from ES to indices */
+    .down-connector {
+      position: absolute;
+      top: 360px;
+      right: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 180px;
+    }
+
+    .down-shaft {
+      width: 2px;
+      height: 28px;
+      background: rgba(254,197,20,0.5);
+    }
+
+    .down-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      color: rgba(254,197,20,0.5);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* Bottom takeaway bar */
+    .callout-bar {
+      position: absolute;
+      bottom: 60px;
+      left: 64px;
+      right: 64px;
+      background: #FEC514;
+      border: 2.5px solid #111;
+      box-shadow: 4px 4px 0 rgba(255,255,255,0.2);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .callout-bar .bar-icon {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: #111;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    .callout-bar .bar-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: #111;
+      letter-spacing: -0.02em;
+    }
+
+    /* Footer */
+    .footer {
+      position: absolute;
+      bottom: 28px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid rgba(255,255,255,0.2);
+      display: flex;
+      justify-content: space-between;
+      padding-top: 8px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.08em;
+    }
+
+    /* Vertical connector lines between flow and indices */
+    .vertical-connector {
+      position: absolute;
+      top: 360px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .vert-line-wrap {
+      width: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-black">
+
+    <!-- Meta label -->
+    <div style="position:absolute;top:24px;left:64px;">
+      <span class="meta-label">[ ARCHITECTURE ]</span>
+    </div>
+
+    <!-- Title -->
+    <div class="slide-title reveal d1">
+      <h2 style="color:#fff;margin:0;">Memory-as-a-Service Architecture</h2>
+    </div>
+
+    <!-- Note bar -->
+    <div class="note-bar reveal d2">
+      <span class="note-text">No custom MCP server · No middleware · Agent Builder IS the MCP server</span>
+      <div class="note-divider"></div>
+    </div>
+
+    <!-- Flow diagram -->
+    <div class="flow-container reveal d3">
+
+      <!-- Coding Harness box -->
+      <div class="flow-box" style="min-width:170px;">
+        <span class="box-label">[ HARNESS ]</span>
+        <span class="box-name">Coding Harness</span>
+        <span class="box-sub">CLI / IDE</span>
+      </div>
+
+      <!-- Arrow 1 -->
+      <div class="arrow-block" style="min-width:90px;">
+        <div class="arrow-line">
+          <div class="arrow-shaft"></div>
+          <div class="arrow-head"></div>
+        </div>
+        <div class="arrow-label">MCP protocol<br/>JSON-RPC 2.0</div>
+      </div>
+
+      <!-- Elastic Agent Builder box -->
+      <div class="flow-box" style="min-width:210px;">
+        <span class="box-label">[ MCP SERVER ]</span>
+        <span class="box-name">Elastic<br/>Agent Builder</span>
+        <span class="box-sub">tools + routing</span>
+      </div>
+
+      <!-- Arrow 2 -->
+      <div class="arrow-block" style="min-width:90px;">
+        <div class="arrow-line">
+          <div class="arrow-shaft"></div>
+          <div class="arrow-head"></div>
+        </div>
+        <div class="arrow-label">Jina v5 + ES|QL<br/>semantic + structured</div>
+      </div>
+
+      <!-- Elasticsearch box — yellow accent -->
+      <div class="flow-box yellow-box" style="min-width:180px;">
+        <span class="box-label">[ STORE ]</span>
+        <span class="box-name">Elasticsearch</span>
+        <span class="box-sub">vector · keyword · hybrid</span>
+      </div>
+
+    </div>
+
+    <!-- Down arrow from ES to indices -->
+    <div style="position:absolute;top:354px;right:64px;width:180px;display:flex;flex-direction:column;align-items:center;" class="reveal d4">
+      <div style="width:2px;height:30px;background:rgba(254,197,20,0.45);"></div>
+      <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid rgba(254,197,20,0.45);"></div>
+    </div>
+
+    <!-- Indices row -->
+    <div class="indices-container reveal d4">
+      <div class="indices-label">[ THREE INDICES ]</div>
+      <div class="indices-row">
+
+        <div class="index-box">
+          <div class="idx-label">[ INDEX 01 ]</div>
+          <div class="idx-name">conversation-history</div>
+          <div class="idx-desc">every exchange, timestamped + session-linked</div>
+        </div>
+
+        <div class="index-box fill-yellow-dim">
+          <div class="idx-label">[ INDEX 02 ]</div>
+          <div class="idx-name">knowledge-facts</div>
+          <div class="idx-desc">decisions, policies, technical rationale</div>
+        </div>
+
+        <div class="index-box">
+          <div class="idx-label">[ INDEX 03 ]</div>
+          <div class="idx-name">session-metadata</div>
+          <div class="idx-desc">context windows, agents, session state</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom callout bar -->
+    <div class="callout-bar reveal d5">
+      <span class="bar-icon">→</span>
+      <span class="bar-text">Wire your Coding CLI / IDE. Point it at Elastic. Your agent has persistent memory.</span>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

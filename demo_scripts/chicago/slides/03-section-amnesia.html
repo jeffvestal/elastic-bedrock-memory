@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Amnesia Problem</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .geo-circle {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(255, 255, 255, 0.12);
+      bottom: -80px;
+      right: 80px;
+    }
+
+    .geo-circle-inner {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(254, 197, 20, 0.25);
+      bottom: -10px;
+      right: 150px;
+    }
+
+    .yellow-rect {
+      position: absolute;
+      width: 6px;
+      height: 120px;
+      background: var(--yellow);
+      top: 50%;
+      left: 64px;
+      transform: translateY(-50%);
+    }
+
+    .act-block {
+      position: absolute;
+      top: 50%;
+      left: 108px;
+      transform: translateY(-50%);
+    }
+
+    .act-block .eyebrow {
+      color: var(--yellow);
+      opacity: 1;
+      margin-bottom: 20px;
+    }
+
+    .act-block h1 {
+      color: #fff;
+      font-size: 88px;
+      line-height: 1;
+      margin: 0;
+      max-width: 700px;
+    }
+
+    .act-block .kicker {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 28px;
+    }
+
+    .meta-corner {
+      position: absolute;
+      top: 40px;
+      right: 64px;
+    }
+
+    .meta-corner .meta-label {
+      color: rgba(255, 255, 255, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-black">
+
+    <div class="yellow-rect reveal d1"></div>
+
+    <div class="act-block">
+      <div class="eyebrow reveal d2">[ ACT_01 ]</div>
+      <h1 class="reveal d3">The Amnesia<br>Problem</h1>
+      <div class="kicker reveal d4">When agents forget everything between sessions</div>
+    </div>
+
+    <div class="geo-circle reveal d2"></div>
+    <div class="geo-circle-inner reveal d3"></div>
+
+    <div class="meta-corner">
+      <span class="meta-label reveal d1">SECTION_02</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

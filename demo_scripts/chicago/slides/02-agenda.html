@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .agenda-list {
+      position: absolute;
+      top: 88px;
+      left: 64px;
+      width: 780px;
+      display: flex;
+      flex-direction: column;
+      gap: 0px;
+    }
+
+    .agenda-item {
+      display: flex;
+      align-items: center;
+      gap: 0px;
+      border-bottom: 1.5px solid rgba(17,17,17,0.15);
+      padding: 14px 0;
+    }
+
+    .agenda-item:first-child {
+      border-top: 1.5px solid rgba(17,17,17,0.15);
+    }
+
+    .big-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1;
+      color: transparent;
+      -webkit-text-stroke: 1.5px rgba(17,17,17,0.18);
+      min-width: 110px;
+      text-align: right;
+      padding-right: 28px;
+      flex-shrink: 0;
+      letter-spacing: -0.04em;
+    }
+
+    .item-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      opacity: 0.35;
+      color: var(--black);
+    }
+
+    .item-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .item-title.highlight {
+      color: var(--black);
+    }
+
+    .geo-block {
+      position: absolute;
+      top: 72px;
+      right: 64px;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .geo-square {
+      width: 300px;
+      height: 300px;
+      background: var(--yellow);
+      border: 2.5px solid var(--black);
+      box-shadow: 6px 6px 0 var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .geo-square-inner {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      border: 2px solid var(--black);
+    }
+
+    .geo-square-cross-h {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1.5px;
+      background: var(--black);
+      transform: translateY(-50%);
+    }
+
+    .geo-square-cross-v {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1.5px;
+      background: var(--black);
+      transform: translateX(-50%);
+    }
+
+    .geo-label {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: var(--black);
+      opacity: 0.6;
+    }
+
+    .geo-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: var(--black);
+      border-radius: 50%;
+    }
+
+    .dot-tl { top: 12px; left: 12px; }
+    .dot-tr { top: 12px; right: 12px; }
+    .dot-bl { bottom: 12px; left: 12px; }
+    .dot-br { bottom: 12px; right: 12px; }
+    .dot-center {
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      transform: translate(-50%, -50%);
+      background: var(--black);
+    }
+
+    .vert-label {
+      position: absolute;
+      right: 64px;
+      top: 392px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      opacity: 0.3;
+      color: var(--black);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+    }
+
+    .pill-tag {
+      position: absolute;
+      top: 88px;
+      right: 64px;
+    }
+
+    .meta-label-top {
+      position: absolute;
+      top: 32px;
+      right: 64px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      opacity: 0.35;
+      color: var(--black);
+    }
+
+    .slide-eyebrow {
+      position: absolute;
+      top: 32px;
+      left: 64px;
+    }
+
+    .callout-bar {
+      position: absolute;
+      bottom: 64px;
+      left: 64px;
+      right: 64px;
+      background: var(--black);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .callout-bar span {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .callout-bar .bar-divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(254,197,20,0.3);
+      flex-shrink: 0;
+    }
+
+    .callout-bar .bar-main {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--yellow);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+
+    <span class="eyebrow slide-eyebrow reveal d1">[ SECTION_00 ] — Overview</span>
+    <span class="meta-label-top reveal d1">AGENDA</span>
+
+    <div class="agenda-list">
+
+      <div class="agenda-item reveal d2">
+        <div class="big-num">01</div>
+        <div class="item-content">
+          <span class="item-label">Context</span>
+          <span class="item-title">The Amnesia Problem</span>
+        </div>
+      </div>
+
+      <div class="agenda-item reveal d3">
+        <div class="big-num">02</div>
+        <div class="item-content">
+          <span class="item-label">Live Demo</span>
+          <span class="item-title">Agent Without Memory</span>
+        </div>
+      </div>
+
+      <div class="agenda-item reveal d4">
+        <div class="big-num">03</div>
+        <div class="item-content">
+          <span class="item-label">Live Build</span>
+          <span class="item-title">Build the Memory System — Live</span>
+        </div>
+      </div>
+
+      <div class="agenda-item reveal d5">
+        <div class="big-num">04</div>
+        <div class="item-content">
+          <span class="item-label">Live Demo</span>
+          <span class="item-title">Agent With Memory</span>
+        </div>
+      </div>
+
+      <div class="agenda-item reveal d6">
+        <div class="big-num">05</div>
+        <div class="item-content">
+          <span class="item-label">Takeaway</span>
+          <span class="item-title">Build It Yourself</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="geo-block reveal d3" style="position:absolute; top:72px; right:64px; width:280px; height:280px;">
+      <div class="geo-square" style="width:280px; height:280px;">
+        <div class="geo-square-inner">
+          <div class="geo-square-cross-h"></div>
+          <div class="geo-square-cross-v"></div>
+        </div>
+        <div class="geo-dot dot-tl"></div>
+        <div class="geo-dot dot-tr"></div>
+        <div class="geo-dot dot-bl"></div>
+        <div class="geo-dot dot-br"></div>
+        <div class="geo-dot dot-center"></div>
+        <span class="geo-label">60 min · 5 acts</span>
+      </div>
+    </div>
+
+    <span class="vert-label reveal d4">Chicago Tech Week 2026</span>
+
+    <footer class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </footer>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

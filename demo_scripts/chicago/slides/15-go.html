@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GO</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .cue-word {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Inter', sans-serif;
+      font-size: 220px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: transparent;
+      -webkit-text-stroke: 3px #FEC514;
+      text-stroke: 3px #FEC514;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .cue-arrow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Inter', sans-serif;
+      font-size: 180px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #FEC514;
+      white-space: nowrap;
+    }
+
+    .meta-presenter {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .corner-label {
+      position: absolute;
+      top: 40px;
+      right: 48px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-black">
+
+    <div class="corner-label reveal d1">[ PRESENTER_CUE ]</div>
+
+    <div class="cue-arrow reveal d1">→ demo</div>
+
+    <div class="meta-presenter reveal d2">switch to demo environment</div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

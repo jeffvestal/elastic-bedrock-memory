@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank You — Chicago Tech Week 2026</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .slide.bg-black::before {
+      opacity: 0.06;
+    }
+
+    .thank-headline {
+      position: absolute;
+      top: 148px;
+      left: 80px;
+      right: 80px;
+      font-size: 108px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .contact-block {
+      position: absolute;
+      bottom: 148px;
+      left: 80px;
+    }
+
+    .contact-name {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 10px;
+    }
+
+    .contact-email {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .yellow-bar {
+      position: absolute;
+      top: 148px;
+      right: 80px;
+      width: 8px;
+      height: 108px;
+      background: var(--yellow);
+      box-shadow: 4px 4px 0 rgba(254, 197, 20, 0.3);
+    }
+
+    .accent-pill {
+      position: absolute;
+      bottom: 160px;
+      right: 80px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: #111;
+      background: var(--yellow);
+      border: 2px solid #111;
+      box-shadow: 3px 3px 0 rgba(254, 197, 20, 0.5);
+      border-radius: 999px;
+      padding: 8px 20px;
+    }
+
+    .divider-line {
+      position: absolute;
+      top: 280px;
+      left: 80px;
+      width: 320px;
+      height: 2.5px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .meta-handle {
+      position: absolute;
+      top: 316px;
+      left: 80px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .footer {
+      border-top-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .footer span {
+      color: rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-black">
+
+    <div class="yellow-bar reveal d1"></div>
+
+    <div class="thank-headline reveal d2">Thank you.</div>
+
+    <div class="divider-line reveal d3"></div>
+
+    <div class="meta-handle reveal d3">[ CLOSING ]</div>
+
+    <div class="contact-block reveal d4">
+      <div class="contact-name">Find me after — or online</div>
+      <div class="contact-email">jeff.vestal@elastic.co</div>
+    </div>
+
+    <div class="accent-pill reveal d5">Chicago Tech Week 2026</div>
+
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

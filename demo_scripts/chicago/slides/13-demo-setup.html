@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Setup</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .slide-13 {
+      position: relative;
+    }
+
+    .eyebrow-row {
+      position: absolute;
+      top: 52px;
+      left: 64px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .meta-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.35;
+      color: var(--black);
+    }
+
+    .eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      color: var(--black);
+    }
+
+    .heading-block {
+      position: absolute;
+      top: 100px;
+      left: 64px;
+    }
+
+    .heading-block h2 {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--black);
+      margin: 0;
+      line-height: 1;
+    }
+
+    .heading-block .sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.45;
+      margin-top: 10px;
+    }
+
+    /* Left column: codebase + task */
+    .left-col {
+      position: absolute;
+      top: 218px;
+      left: 64px;
+      width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-block {
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      background: #fff;
+      padding: 18px 22px;
+      border-radius: 4px;
+    }
+
+    .info-block .block-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      margin-bottom: 8px;
+    }
+
+    .info-block .block-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--black);
+      letter-spacing: -0.01em;
+    }
+
+    .info-block .block-value span.hl {
+      background: var(--yellow);
+      padding: 0 4px;
+    }
+
+    /* Mission brief hard-box */
+    .mission-box {
+      position: absolute;
+      top: 218px;
+      left: 604px;
+      width: 612px;
+      border: 2.5px solid var(--black);
+      box-shadow: 6px 6px 0 var(--black);
+      background: var(--yellow);
+      border-radius: 4px;
+      padding: 28px 30px 24px;
+    }
+
+    .mission-box .mission-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 14px;
+      color: var(--black);
+    }
+
+    .mission-box .mission-title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: var(--black);
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .mission-box .mission-divider {
+      border: none;
+      border-top: 1.5px solid rgba(17,17,17,0.25);
+      margin-bottom: 18px;
+    }
+
+    .outcome-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .outcome-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .outcome-bullet {
+      width: 8px;
+      height: 8px;
+      min-width: 8px;
+      min-height: 8px;
+      background: var(--black);
+      border-radius: 50%;
+      margin-top: 6px;
+    }
+
+    .outcome-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--black);
+      font-weight: 700;
+    }
+
+    .outcome-text em {
+      font-style: normal;
+      opacity: 0.55;
+      font-weight: 400;
+    }
+
+    /* Bottom callout bar */
+    .callout-bar {
+      position: absolute;
+      bottom: 68px;
+      left: 64px;
+      right: 64px;
+      background: var(--black);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 rgba(17,17,17,0.3);
+    }
+
+    .callout-bar .bar-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      text-align: center;
+    }
+
+    .callout-bar .bar-text strong {
+      color: #fff;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 28px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid var(--black);
+      display: flex;
+      justify-content: space-between;
+      padding-top: 8px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      color: var(--black);
+    }
+
+    /* Vertical accent label */
+    .vert-label {
+      position: absolute;
+      top: 218px;
+      right: 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.2;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      color: var(--black);
+    }
+
+    /* Seed context strip */
+    .seed-strip {
+      position: absolute;
+      top: 490px;
+      left: 64px;
+      width: 500px;
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      background: var(--black);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-radius: 4px;
+    }
+
+    .seed-strip .seed-num {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--yellow);
+      line-height: 1;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: -0.04em;
+    }
+
+    .seed-strip .seed-desc {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .seed-strip .seed-desc .seed-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    .seed-strip .seed-desc .seed-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide slide-13">
+
+    <!-- Eyebrow / meta row -->
+    <div class="eyebrow-row reveal d1">
+      <span class="meta-label">[ SECTION_03 ]</span>
+      <span class="eyebrow">Mission Briefing</span>
+    </div>
+
+    <!-- Heading -->
+    <div class="heading-block reveal d2">
+      <h2>The Setup</h2>
+      <div class="sub">What we're building. Right now. On stage.</div>
+    </div>
+
+    <!-- Left column: codebase info blocks -->
+    <div class="left-col reveal d3">
+      <div class="info-block">
+        <div class="block-label">[ Codebase ]</div>
+        <div class="block-value"><span class="hl">checkout-service-demo</span></div>
+      </div>
+      <div class="info-block">
+        <div class="block-label">[ Framework ]</div>
+        <div class="block-value">FastAPI · Python · PostgreSQL</div>
+      </div>
+      <div class="info-block">
+        <div class="block-label">[ Language ]</div>
+        <div class="block-value">Python 3.12</div>
+      </div>
+    </div>
+
+    <!-- Seed context strip -->
+    <div class="seed-strip reveal d4">
+      <div class="seed-num">2 wks</div>
+      <div class="seed-desc">
+        <div class="seed-title">Team decisions already made</div>
+        <div class="seed-sub">Seeded into Elasticsearch · ready to retrieve</div>
+      </div>
+    </div>
+
+    <!-- Mission brief box -->
+    <div class="mission-box reveal d3">
+      <div class="mission-label">[ The Task ]</div>
+      <div class="mission-title">Add a refund endpoint<br>to the checkout service.</div>
+      <hr class="mission-divider">
+      <div class="outcome-row">
+        <div class="outcome-item">
+          <div class="outcome-bullet"></div>
+          <div class="outcome-text">Same verbatim prompt <em>— both times</em></div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-bullet"></div>
+          <div class="outcome-text">Agent A: <em>no memory context</em></div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-bullet"></div>
+          <div class="outcome-text">Agent B: <em>memory-wired via Elasticsearch</em></div>
+        </div>
+        <div class="outcome-item">
+          <div class="outcome-bullet"></div>
+          <div class="outcome-text">Different results. <em>Same codebase. Same prompt.</em></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vertical accent -->
+    <div class="vert-label">Demo · Live</div>
+
+    <!-- Callout bar -->
+    <div class="callout-bar reveal d5">
+      <div class="bar-text">
+        <strong>Same prompt.</strong> &nbsp;Two agents.&nbsp; <strong>Different results.</strong>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

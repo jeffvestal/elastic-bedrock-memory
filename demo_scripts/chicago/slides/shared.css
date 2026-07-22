@@ -1,0 +1,310 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* ─── Tokens ─────────────────────────────────────────────── */
+:root {
+  --black:   #111111;
+  --white:   #FFFFFF;
+  --cream:   #F4F0E8;
+  --yellow:  #FEC514;
+  --poppy:   #FF6B47;
+  --teal:    #00BFA5;
+  --blue:    #0B64DD;
+
+  --shadow:  6px 6px 0px var(--black);
+  --shadow-yellow: 6px 6px 0px var(--yellow);
+  --shadow-sm: 3px 3px 0px var(--black);
+}
+
+/* ─── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 1280px;
+  height: 720px;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Slide base ─────────────────────────────────────────── */
+.slide {
+  width: 1280px;
+  height: 720px;
+  position: relative;
+  overflow: hidden;
+  background: var(--cream);
+  color: var(--black);
+}
+
+/* Memphis dot grid texture */
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--black) 1.2px, transparent 1.2px);
+  background-size: 28px 28px;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+.slide.bg-black  { background: var(--black); color: var(--white); }
+.slide.bg-yellow { background: var(--yellow); color: var(--black); }
+.slide.bg-white  { background: var(--white); color: var(--black); }
+
+/* ─── Animations ─────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+.reveal { opacity: 0; animation: fade-up 0.35s ease forwards; }
+.d1 { animation-delay: 0.04s; }
+.d2 { animation-delay: 0.12s; }
+.d3 { animation-delay: 0.20s; }
+.d4 { animation-delay: 0.28s; }
+.d5 { animation-delay: 0.36s; }
+.d6 { animation-delay: 0.44s; }
+.d7 { animation-delay: 0.52s; }
+
+/* ─── Meta label (postmodern exposed framework) ───────────── */
+.meta-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--black);
+  opacity: 0.35;
+}
+.bg-black .meta-label { color: var(--white); }
+.bg-yellow .meta-label { color: var(--black); }
+
+/* ─── Typography ─────────────────────────────────────────── */
+h1 {
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+  color: var(--black);
+}
+.bg-black h1 { color: var(--white); }
+.bg-yellow h1 { color: var(--black); }
+
+h1 .accent { color: var(--yellow); }
+.bg-yellow h1 .accent { color: var(--black); -webkit-text-stroke: 2px var(--black); }
+.bg-black h1 .accent { color: var(--yellow); }
+
+/* Outlined display text */
+h1.outline {
+  color: transparent;
+  -webkit-text-stroke: 3px var(--black);
+}
+.bg-black h1.outline { -webkit-text-stroke: 3px var(--white); }
+
+h2 {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.bg-black h2 { color: var(--white); }
+
+h3 {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+p.body {
+  font-size: 19px;
+  line-height: 1.6;
+  max-width: 860px;
+  color: var(--black);
+}
+.bg-black p.body { color: rgba(255,255,255,0.82); }
+
+/* ─── Eyebrow / section tag ──────────────────────────────── */
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* ─── Hard-shadow box (postmodern sticker) ───────────────── */
+.hard-box {
+  border: 2.5px solid var(--black);
+  box-shadow: var(--shadow);
+  border-radius: 0;
+  background: var(--white);
+  padding: 20px 24px;
+}
+.hard-box.fill-yellow  { background: var(--yellow); }
+.hard-box.fill-black   { background: var(--black); color: var(--white); box-shadow: 6px 6px 0px var(--yellow); }
+.hard-box.fill-cream   { background: var(--cream); }
+
+/* ─── Pill / circle shapes ───────────────────────────────── */
+.pill {
+  display: inline-block;
+  border: 2.5px solid var(--black);
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-sm);
+}
+.pill.fill-yellow { background: var(--yellow); }
+.pill.fill-black  { background: var(--black); color: var(--white); }
+
+/* ─── Cards with hard shadow ─────────────────────────────── */
+.card-grid { display: grid; gap: 16px; }
+.card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.card {
+  border: 2px solid var(--black);
+  box-shadow: var(--shadow-sm);
+  background: var(--white);
+  padding: 18px 20px;
+}
+.card.fill-yellow { background: var(--yellow); box-shadow: 4px 4px 0 var(--black); }
+.card h3 { font-size: 14px; margin-bottom: 8px; }
+.card p  { font-size: 13.5px; line-height: 1.5; color: #333; }
+
+/* ─── Bullets ────────────────────────────────────────────── */
+ul.bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1000px;
+}
+ul.bullets li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 18px;
+  line-height: 1.5;
+}
+ul.bullets li::before {
+  content: '▪';
+  position: absolute;
+  left: 0;
+  color: var(--yellow);
+  font-size: 14px;
+  top: 3px;
+}
+.bg-black ul.bullets li { color: rgba(255,255,255,0.85); }
+ul.bullets li b { font-weight: 800; }
+
+/* ─── Rotated background text (structural, not decoration) ── */
+.bg-text {
+  position: absolute;
+  font-size: 240px;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--black);
+  opacity: 0.06;
+}
+.bg-black .bg-text { -webkit-text-stroke: 2px var(--white); }
+
+/* ─── Geometric accents ──────────────────────────────────── */
+.circle-outline {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid var(--black);
+}
+.rect-fill {
+  position: absolute;
+  background: var(--yellow);
+}
+.slash-divider {
+  width: 100%;
+  height: 3px;
+  background: var(--black);
+}
+
+/* ─── Footer ─────────────────────────────────────────────── */
+.footer {
+  position: absolute;
+  bottom: 28px;
+  left: 64px; right: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1.5px solid var(--black);
+  padding-top: 10px;
+}
+.bg-black .footer { border-top-color: rgba(255,255,255,0.2); }
+.bg-yellow .footer { border-top-color: var(--black); }
+.footer span {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Elastic logo mark injected after footer left text */
+.footer span:first-child::after {
+  content: '';
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjI4MCIgdmlld0JveD0iMCAwIDI4MCAyODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0yMjAgMTQzLjQ5NEMyMjAuMDE0IDEzNy4wMDIgMjE4LjAyIDEzMC42NjQgMjE0LjI5MSAxMjUuMzQ4QzIxMC41NjMgMTIwLjAzMyAyMDUuMjgyIDExNiAxOTkuMTczIDExMy44MDJDMTk5LjczMSAxMTAuOTcgMjAwLjAxMiAxMDguMDkgMjAwLjAxNCAxMDUuMjA0QzIwMC4wMTYgOTUuNjQ2NiAxOTYuOTg5IDg2LjMzNDUgMTkxLjM2NyA3OC42MDZDMTg1Ljc0NCA3MC44Nzc0IDE3Ny44MTYgNjUuMTMwNCAxNjguNzIzIDYyLjE5MDhDMTU5LjYyOSA1OS4yNTExIDE0OS44MzcgNTkuMjcwMyAxNDAuNzU0IDYyLjI0NTZDMTMxLjY3MiA2NS4yMjA4IDEyMy43NjcgNzAuOTk4OSAxMTguMTc1IDc4Ljc0OTVDMTE0LjA1MSA3NS41NTUzIDEwOC45OTkgNzMuNzkxOSAxMDMuNzgzIDczLjcyNjRDOTguNTY2OSA3My42NjA5IDkzLjQ3MTkgNzUuMjk2OCA4OS4yNjkxIDc4LjM4NjRDODUuMDY2NCA4MS40NzYxIDgxLjk4NSA4NS44NTExIDgwLjQ5MTUgOTAuODQ5Qzc4Ljk5OCA5NS44NDY4IDc5LjE3MzggMTAxLjE5NSA4MC45OTI0IDEwNi4wODRDNzQuODY2NyAxMDguMzEzIDY5LjU3MSAxMTIuMzY1IDY1LjgxNzkgMTE3LjY5NUM2Mi4wNjQ3IDEyMy4wMjUgNjAuMDM0NCAxMjkuMzc2IDYwLjAwMDIgMTM1Ljg5NEM1OS45Nzk2IDE0Mi40MTMgNjEuOTgwNSAxNDguNzc4IDY1LjcyNzMgMTU0LjExM0M2OS40NzQxIDE1OS40NDcgNzQuNzgyNSAxNjMuNDg5IDgwLjkyMTYgMTY1LjY4MUM4MC4zODk2IDE2OC41MTQgODAuMTI2NCAxNzEuMzkgODAuMTM1NyAxNzQuMjcxQzgwLjExODYgMTgzLjgyNiA4My4xMzg5IDE5My4xMzkgODguNzYwMyAyMDAuODY2Qzk0LjM4MTggMjA4LjU5MiAxMDIuMzEzIDIxNC4zMzEgMTExLjQxIDIxNy4yNTVDMTIwLjUwNiAyMjAuMTc5IDEzMC4yOTcgMjIwLjEzNyAxMzkuMzY3IDIxNy4xMzNDMTQ4LjQzOCAyMTQuMTI5IDE1Ni4zMTkgMjA4LjMyIDE2MS44NzMgMjAwLjU0NUMxNjUuOTg0IDIwMy43NTMgMTcxLjAzIDIwNS41MzMgMTc2LjI0NSAyMDUuNjEzQzE4MS40NiAyMDUuNjkzIDE4Ni41NTggMjA0LjA3IDE5MC43NjcgMjAwLjk4OUMxOTQuOTc1IDE5Ny45MDkgMTk4LjA2NCAxOTMuNTQgMTk5LjU2NCAxODguNTQ1QzIwMS4wNjQgMTgzLjU1IDIwMC44OTQgMTc4LjIwMiAxOTkuMDc4IDE3My4zMTNDMjA1LjE5MiAxNzEuMDcyIDIxMC40NzQgMTY3LjAxMyAyMTQuMjEzIDE2MS42ODNDMjE3Ljk1MyAxNTYuMzUzIDIxOS45NzMgMTUwLjAwNiAyMjAgMTQzLjQ5NFpNMTIxLjk0NyA4My41NzUxQzEyNy4wOTkgNzYuMDgxNSAxMzQuNjc5IDcwLjU5NTEgMTQzLjQwNyA2OC4wNDJDMTUyLjEzNSA2NS40ODg5IDE2MS40NzcgNjYuMDI1NCAxNjkuODU1IDY5LjU2MTFDMTc4LjIzMyA3My4wOTY4IDE4NS4xMzUgNzkuNDE1IDE4OS4zOTUgODcuNDQ5MkMxOTMuNjU2IDk1LjQ4MzQgMTk1LjAxMyAxMDQuNzQxIDE5My4yMzkgMTEzLjY2MUwxNTcuOTE5IDE0NC41OTVMMTIyLjkwNiAxMjguNjRMMTE2LjA2OCAxMTQuMDQ2TDEyMS45NDcgODMuNTc1MVpNMTA0LjI0IDc5LjY0NTRDMTA4LjM5MiA3OS42NDQ2IDExMi40MyA4MS4wMDg4IDExNS43MzEgODMuNTI3OUwxMTAuNDMzIDExMC43OTJMODYuNDQ2NyAxMDUuMTI1Qzg1LjQwNjUgMTAyLjI2MSA4NS4wNzA3IDk5LjE4ODMgODUuNDY3NyA5Ni4xNjY4Qzg1Ljg2NDcgOTMuMTQ1MyA4Ni45ODI3IDkwLjI2MzcgODguNzI3NSA4Ny43NjUyQzkwLjQ3MjMgODUuMjY2NyA5Mi43OTI2IDgzLjIyNDcgOTUuNDkyNSA4MS44MTE0Qzk4LjE5MjUgODAuMzk4MiAxMDEuMTkzIDc5LjY1NTMgMTA0LjI0IDc5LjY0NTRaTTY2LjE4NTQgMTM1Ljk2NUM2Ni4yMjA3IDEzMC40MDMgNjcuOTkxMiAxMjQuOTkgNzEuMjQ5OSAxMjAuNDgxQzc0LjUwODYgMTE1Ljk3MyA3OS4wOTMxIDExMi41OTQgODQuMzY0IDExMC44MTVMMTEwLjY5MyAxMTcuMDMyTDExNi44NyAxMzAuMjQ0TDgzLjIwODcgMTYwLjY5MUM3OC4yMDAyIDE1OC43NzkgNzMuODkwNCAxNTUuMzkyIDcwLjg1MDQgMTUwLjk3NkM2Ny44MTA0IDE0Ni41NjEgNjYuMTgzNiAxNDEuMzI2IDY2LjE4NTQgMTM1Ljk2NVpNMTU4LjIxIDE5NS44NDVDMTUzLjQ1NCAyMDIuODQ4IDE0Ni41NzcgMjA4LjE0IDEzOC41OTEgMjEwLjk0NkMxMzAuNjA0IDIxMy43NTEgMTIxLjkyOCAyMTMuOTIxIDExMy44MzggMjExLjQzMkMxMDUuNzQ3IDIwOC45NDIgOTguNjY4MSAyMDMuOTI0IDkzLjY0MDQgMTk3LjExNEM4OC42MTI3IDE5MC4zMDMgODUuOTAxMyAxODIuMDYxIDg1LjkwNDQgMTczLjU5NkM4NS45MDgxIDE3MC45NTYgODYuMTcxNCAxNjguMzI0IDg2LjY5MDQgMTY1LjczNkwxMjEuMTE0IDEzNC41ODJMMTU2LjI2MSAxNTAuNTk5TDE2NC4wNDIgMTY1LjQ2OUwxNTguMjEgMTk1Ljg0NVpNMTc1Ljc5OSAxOTkuNzc1QzE3MS42NTkgMTk5Ljc2MSAxNjcuNjM5IDE5OC4zNzkgMTY0LjM2NCAxOTUuODQ1TDE2OS41ODIgMTY4LjY2OEwxOTMuNTUzIDE3NC4yNzFDMTk0LjU5NiAxNzcuMTMzIDE5NC45MzUgMTgwLjIwNCAxOTQuNTQxIDE4My4yMjRDMTk0LjE0OCAxODYuMjQ0IDE5My4wMzQgMTg5LjEyNSAxOTEuMjkzIDE5MS42MjRDMTg5LjU1MiAxOTQuMTI0IDE4Ny4yMzYgMTk2LjE2NyAxODQuNTM5IDE5Ny41ODNDMTgxLjg0MyAxOTguOTk5IDE3OC44NDUgMTk5Ljc0NSAxNzUuNzk5IDE5OS43NTlWMTk5Ljc3NVpNMTk1LjYzNiAxNjguNTY2TDE2OS4yNDUgMTYyLjM5NkwxNjIuMjM0IDE0OS4wMzVMMTk2Ljc1MiAxMTguNzkzQzIwMS43NjUgMTIwLjY4OCAyMDYuMDgyIDEyNC4wNjQgMjA5LjEzIDEyOC40NzJDMjEyLjE3OCAxMzIuODggMjEzLjgxMiAxMzguMTEyIDIxMy44MTUgMTQzLjQ3MUMyMTMuNzY1IDE0OS4wMjEgMjExLjk4NyAxNTQuNDE5IDIwOC43MyAxNTguOTEzQzIwNS40NzIgMTYzLjQwNyAyMDAuODk2IDE2Ni43NzYgMTk1LjYzNiAxNjguNTVWMTY4LjU2NloiIGZpbGw9IiMxQzFFMjMiLz4KPC9zdmc+Cg==") center/contain no-repeat;
+}
+.bg-black .footer span:first-child::after {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjI4MCIgdmlld0JveD0iMCAwIDI4MCAyODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0yMjAgMTQzLjQ5NEMyMjAuMDE0IDEzNy4wMDIgMjE4LjAyIDEzMC42NjQgMjE0LjI5MSAxMjUuMzQ4QzIxMC41NjMgMTIwLjAzMyAyMDUuMjgyIDExNiAxOTkuMTczIDExMy44MDJDMTk5LjczMSAxMTAuOTcgMjAwLjAxMiAxMDguMDkgMjAwLjAxNCAxMDUuMjA0QzIwMC4wMTYgOTUuNjQ2NiAxOTYuOTg5IDg2LjMzNDUgMTkxLjM2NyA3OC42MDZDMTg1Ljc0NCA3MC44Nzc0IDE3Ny44MTYgNjUuMTMwNCAxNjguNzIzIDYyLjE5MDhDMTU5LjYyOSA1OS4yNTExIDE0OS44MzcgNTkuMjcwMyAxNDAuNzU0IDYyLjI0NTZDMTMxLjY3MiA2NS4yMjA4IDEyMy43NjcgNzAuOTk4OSAxMTguMTc1IDc4Ljc0OTVDMTE0LjA1MSA3NS41NTUzIDEwOC45OTkgNzMuNzkxOSAxMDMuNzgzIDczLjcyNjRDOTguNTY2OSA3My42NjA5IDkzLjQ3MTkgNzUuMjk2OCA4OS4yNjkxIDc4LjM4NjRDODUuMDY2NCA4MS40NzYxIDgxLjk4NSA4NS44NTExIDgwLjQ5MTUgOTAuODQ5Qzc4Ljk5OCA5NS44NDY4IDc5LjE3MzggMTAxLjE5NSA4MC45OTI0IDEwNi4wODRDNzQuODY2NyAxMDguMzEzIDY5LjU3MSAxMTIuMzY1IDY1LjgxNzkgMTE3LjY5NUM2Mi4wNjQ3IDEyMy4wMjUgNjAuMDM0NCAxMjkuMzc2IDYwLjAwMDIgMTM1Ljg5NEM1OS45Nzk2IDE0Mi40MTMgNjEuOTgwNSAxNDguNzc4IDY1LjcyNzMgMTU0LjExM0M2OS40NzQxIDE1OS40NDcgNzQuNzgyNSAxNjMuNDg5IDgwLjkyMTYgMTY1LjY4MUM4MC4zODk2IDE2OC41MTQgODAuMTI2NCAxNzEuMzkgODAuMTM1NyAxNzQuMjcxQzgwLjExODYgMTgzLjgyNiA4My4xMzg5IDE5My4xMzkgODguNzYwMyAyMDAuODY2Qzk0LjM4MTggMjA4LjU5MiAxMDIuMzEzIDIxNC4zMzEgMTExLjQxIDIxNy4yNTVDMTIwLjUwNiAyMjAuMTc5IDEzMC4yOTcgMjIwLjEzNyAxMzkuMzY3IDIxNy4xMzNDMTQ4LjQzOCAyMTQuMTI5IDE1Ni4zMTkgMjA4LjMyIDE2MS44NzMgMjAwLjU0NUMxNjUuOTg0IDIwMy43NTMgMTcxLjAzIDIwNS41MzMgMTc2LjI0NSAyMDUuNjEzQzE4MS40NiAyMDUuNjkzIDE4Ni41NTggMjA0LjA3IDE5MC43NjcgMjAwLjk4OUMxOTQuOTc1IDE5Ny45MDkgMTk4LjA2NCAxOTMuNTQgMTk5LjU2NCAxODguNTQ1QzIwMS4wNjQgMTgzLjU1IDIwMC44OTQgMTc4LjIwMiAxOTkuMDc4IDE3My4zMTNDMjA1LjE5MiAxNzEuMDcyIDIxMC40NzQgMTY3LjAxMyAyMTQuMjEzIDE2MS42ODNDMjE3Ljk1MyAxNTYuMzUzIDIxOS45NzMgMTUwLjAwNiAyMjAgMTQzLjQ5NFpNMTIxLjk0NyA4My41NzUxQzEyNy4wOTkgNzYuMDgxNSAxMzQuNjc5IDcwLjU5NTEgMTQzLjQwNyA2OC4wNDJDMTUyLjEzNSA2NS40ODg5IDE2MS40NzcgNjYuMDI1NCAxNjkuODU1IDY5LjU2MTFDMTc4LjIzMyA3My4wOTY4IDE4NS4xMzUgNzkuNDE1IDE4OS4zOTUgODcuNDQ5MkMxOTMuNjU2IDk1LjQ4MzQgMTk1LjAxMyAxMDQuNzQxIDE5My4yMzkgMTEzLjY2MUwxNTcuOTE5IDE0NC41OTVMMTIyLjkwNiAxMjguNjRMMTE2LjA2OCAxMTQuMDQ2TDEyMS45NDcgODMuNTc1MVpNMTA0LjI0IDc5LjY0NTRDMTA4LjM5MiA3OS42NDQ2IDExMi40MyA4MS4wMDg4IDExNS43MzEgODMuNTI3OUwxMTAuNDMzIDExMC43OTJMODYuNDQ2NyAxMDUuMTI1Qzg1LjQwNjUgMTAyLjI2MSA4NS4wNzA3IDk5LjE4ODMgODUuNDY3NyA5Ni4xNjY4Qzg1Ljg2NDcgOTMuMTQ1MyA4Ni45ODI3IDkwLjI2MzcgODguNzI3NSA4Ny43NjUyQzkwLjQ3MjMgODUuMjY2NyA5Mi43OTI2IDgzLjIyNDcgOTUuNDkyNSA4MS44MTE0Qzk4LjE5MjUgODAuMzk4MiAxMDEuMTkzIDc5LjY1NTMgMTA0LjI0IDc5LjY0NTRaTTY2LjE4NTQgMTM1Ljk2NUM2Ni4yMjA3IDEzMC40MDMgNjcuOTkxMiAxMjQuOTkgNzEuMjQ5OSAxMjAuNDgxQzc0LjUwODYgMTE1Ljk3MyA3OS4wOTMxIDExMi41OTQgODQuMzY0IDExMC44MTVMMTEwLjY5MyAxMTcuMDMyTDExNi44NyAxMzAuMjQ0TDgzLjIwODcgMTYwLjY5MUM3OC4yMDAyIDE1OC43NzkgNzMuODkwNCAxNTUuMzkyIDcwLjg1MDQgMTUwLjk3NkM2Ny44MTA0IDE0Ni41NjEgNjYuMTgzNiAxNDEuMzI2IDY2LjE4NTQgMTM1Ljk2NVpNMTU4LjIxIDE5NS44NDVDMTUzLjQ1NCAyMDIuODQ4IDE0Ni41NzcgMjA4LjE0IDEzOC41OTEgMjEwLjk0NkMxMzAuNjA0IDIxMy43NTEgMTIxLjkyOCAyMTMuOTIxIDExMy44MzggMjExLjQzMkMxMDUuNzQ3IDIwOC45NDIgOTguNjY4MSAyMDMuOTI0IDkzLjY0MDQgMTk3LjExNEM4OC42MTI3IDE5MC4zMDMgODUuOTAxMyAxODIuMDYxIDg1LjkwNDQgMTczLjU5NkM4NS45MDgxIDE3MC45NTYgODYuMTcxNCAxNjguMzI0IDg2LjY5MDQgMTY1LjczNkwxMjEuMTE0IDEzNC41ODJMMTU2LjI2MSAxNTAuNTk5TDE2NC4wNDIgMTY1LjQ2OUwxNTguMjEgMTk1Ljg0NVpNMTc1Ljc5OSAxOTkuNzc1QzE3MS42NTkgMTk5Ljc2MSAxNjcuNjM5IDE5OC4zNzkgMTY0LjM2NCAxOTUuODQ1TDE2OS41ODIgMTY4LjY2OEwxOTMuNTUzIDE3NC4yNzFDMTk0LjU5NiAxNzcuMTMzIDE5NC45MzUgMTgwLjIwNCAxOTQuNTQxIDE4My4yMjRDMTk0LjE0OCAxODYuMjQ0IDE5My4wMzQgMTg5LjEyNSAxOTEuMjkzIDE5MS42MjRDMTg5LjU1MiAxOTQuMTI0IDE4Ny4yMzYgMTk2LjE2NyAxODQuNTM5IDE5Ny41ODNDMTgxLjg0MyAxOTguOTk5IDE3OC44NDUgMTk5Ljc0NSAxNzUuNzk5IDE5OS43NTlWMTk5Ljc3NVpNMTk1LjYzNiAxNjguNTY2TDE2OS4yNDUgMTYyLjM5NkwxNjIuMjM0IDE0OS4wMzVMMTk2Ljc1MiAxMTguNzkzQzIwMS43NjUgMTIwLjY4OCAyMDYuMDgyIDEyNC4wNjQgMjA5LjEzIDEyOC40NzJDMjEyLjE3OCAxMzIuODggMjEzLjgxMiAxMzguMTEyIDIxMy44MTUgMTQzLjQ3MUMyMTMuNzY1IDE0OS4wMjEgMjExLjk4NyAxNTQuNDE5IDIwOC43MyAxNTguOTEzQzIwNS40NzIgMTYzLjQwNyAyMDAuODk2IDE2Ni43NzYgMTk1LjYzNiAxNjguNTVWMTY4LjU2NloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=");
+}
+
+/* ─── Vertical text ──────────────────────────────────────── */
+.vert-label {
+  writing-mode: vertical-rl;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.3;
+}
+
+/* ─── Callout / highlight box ────────────────────────────── */
+.callout {
+  border: 2.5px solid var(--black);
+  box-shadow: var(--shadow);
+  background: var(--yellow);
+  padding: 16px 24px;
+  font-size: 18px;
+  font-weight: 700;
+  max-width: 960px;
+  line-height: 1.45;
+}
+
+/* ─── vs / comparison row ────────────────────────────────── */
+.vs-row {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 0;
+  align-items: start;
+}
+.vs-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 18px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.4;
+}

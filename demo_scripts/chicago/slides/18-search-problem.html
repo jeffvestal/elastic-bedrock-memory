@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Is a Search Problem</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .slide-18 {
+      position: relative;
+    }
+
+    .meta-top {
+      position: absolute;
+      top: 48px;
+      left: 64px;
+    }
+
+    .headline-block {
+      position: absolute;
+      top: 108px;
+      left: 64px;
+      right: 64px;
+    }
+
+    .headline-block h1 {
+      font-size: 80px;
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      color: #ffffff;
+      line-height: 1.0;
+      margin: 0;
+    }
+
+    .headline-block h1 .accent {
+      color: var(--yellow);
+    }
+
+    .divider {
+      position: absolute;
+      top: 318px;
+      left: 64px;
+      right: 64px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .points-block {
+      position: absolute;
+      top: 348px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .point-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .point-marker {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      background: transparent;
+      border: 1.5px solid var(--yellow);
+      padding: 4px 10px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      box-shadow: 3px 3px 0 var(--yellow);
+    }
+
+    .point-text {
+      font-size: 22px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.88);
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .point-text strong {
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .point-text .hl {
+      color: var(--yellow);
+      font-weight: 700;
+    }
+
+    .callout-bar {
+      position: absolute;
+      bottom: 64px;
+      left: 64px;
+      right: 64px;
+      background: var(--yellow);
+      color: var(--black);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 4px 4px 0 rgba(255,255,255,0.3);
+      border: 2px solid var(--yellow);
+    }
+
+    .callout-bar .bar-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    .callout-bar .bar-text {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.01em;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 28px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      padding-top: 8px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-black slide-18">
+
+    <div class="meta-top reveal d1">
+      <span class="meta-label" style="color: rgba(255,255,255,0.35);">[ INSIGHT_03 ]</span>
+    </div>
+
+    <div class="headline-block reveal d2">
+      <h1>Memory Is a<br><span class="accent">Search Problem,</span><br>Not a Context Problem</h1>
+    </div>
+
+    <div class="divider reveal d3"></div>
+
+    <div class="points-block">
+      <div class="point-row reveal d4">
+        <span class="point-marker">01</span>
+        <p class="point-text">Retrieve the <strong>5 facts that matter</strong> — don't re-read <span class="hl">10,000 tokens</span> every turn</p>
+      </div>
+      <div class="point-row reveal d5">
+        <span class="point-marker">02</span>
+        <p class="point-text">Cost scales with <strong>query rate, not knowledge size</strong> — the store grows, <span class="hl">cost-per-query doesn't</span></p>
+      </div>
+      <div class="point-row reveal d6">
+        <span class="point-marker">03</span>
+        <p class="point-text">Same Elasticsearch powering your <strong>logs and search</strong> — memory is <span class="hl">just another index</span></p>
+      </div>
+    </div>
+
+    <div class="callout-bar reveal d7">
+      <span class="bar-label">Thesis</span>
+      <span class="bar-text">If you can search it, you can remember it — and Elastic already does both.</span>
+    </div>
+
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

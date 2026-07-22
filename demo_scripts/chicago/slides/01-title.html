@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Two-zone layout: left content, right geometric panel */
+    .layout {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+    }
+
+    .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 72px 64px 72px 72px;
+      gap: 28px;
+      position: relative;
+    }
+
+    /* Right panel: solid black */
+    .right {
+      background: var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Big outlined "MEMORY" rotated in the right panel */
+    .right .bg-text {
+      font-size: 120px;
+      opacity: 1;
+      color: transparent;
+      -webkit-text-stroke: 1.5px rgba(255,255,255,0.15);
+      transform: rotate(-90deg) translateX(-50%);
+      top: 50%;
+      left: -80px;
+      white-space: nowrap;
+    }
+
+    /* Yellow accent block in right panel */
+    .right .accent-block {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 160px;
+      background: var(--yellow);
+      display: flex;
+      align-items: center;
+      padding: 0 36px;
+    }
+    .right .accent-block p {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      line-height: 1.8;
+      color: var(--black);
+    }
+
+    /* Circle outline decoration */
+    .right .ring {
+      position: absolute;
+      top: 80px; right: 60px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.15);
+    }
+    .right .ring-sm {
+      position: absolute;
+      top: 120px; right: 100px;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--yellow);
+      opacity: 0.5;
+    }
+
+    h1 { font-size: 76px; line-height: 0.95; }
+
+    .tag-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    /* Hard-shadow meta box */
+    .meta-box {
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      background: var(--yellow);
+      display: inline-flex;
+      flex-direction: column;
+      padding: 10px 16px;
+      gap: 2px;
+    }
+    .meta-box .name {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+    .meta-box .role {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+
+    /* Vertical meta label on left edge */
+    .vert-label {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-cream">
+    <div class="layout">
+      <!-- LEFT -->
+      <div class="left">
+        <span class="vert-label vert-label reveal d1">[ TALK_01 · CHICAGO TECH WEEK 2026 ]</span>
+
+        <div>
+          <div class="eyebrow reveal d1" style="margin-bottom:16px; opacity:0.5;">From Stateless to Stateful</div>
+          <h1 class="reveal d2">Giving AI<br>Agents<br><span class="accent" style="color:var(--yellow); -webkit-text-stroke: 0;">Memory</span></h1>
+        </div>
+
+        <div class="meta-box reveal d4">
+          <span class="name">Jeff Vestal</span>
+          <span class="role">Elastic · Senior Principal - AI Architect</span>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right reveal d1">
+        <div class="ring"></div>
+        <div class="ring-sm"></div>
+        <div class="bg-text">MEM</div>
+        <div class="accent-block">
+          <p>
+            ELASTICSEARCH<br>
+            AGENT BUILDER<br>
+            SEMANTIC MEMORY
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

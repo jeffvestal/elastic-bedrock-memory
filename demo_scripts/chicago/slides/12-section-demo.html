@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Let's See It</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .slide-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 0 96px;
+    }
+
+    .act-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      opacity: 0.9;
+      margin-bottom: 24px;
+    }
+
+    .main-heading {
+      font-size: 108px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      color: #ffffff;
+      line-height: 0.9;
+      margin: 0;
+      z-index: 2;
+      position: relative;
+    }
+
+    .arrow-giant {
+      position: absolute;
+      right: 64px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 240px;
+      font-weight: 900;
+      color: var(--yellow);
+      line-height: 1;
+      letter-spacing: -0.05em;
+      font-family: 'Inter', sans-serif;
+      user-select: none;
+      opacity: 0.95;
+    }
+
+    .kicker {
+      margin-top: 32px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .yellow-bar {
+      width: 80px;
+      height: 6px;
+      background: var(--yellow);
+      margin-bottom: 36px;
+      box-shadow: 3px 3px 0 rgba(254, 197, 20, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="slide bg-black">
+    <div class="slide-inner">
+      <div class="act-label reveal d1">[ ACT_03 ]</div>
+      <div class="yellow-bar reveal d2"></div>
+      <h1 class="main-heading reveal d3">Let's<br>See It</h1>
+      <p class="kicker reveal d4">live demo — memory in motion</p>
+    </div>
+
+    <div class="arrow-giant reveal d3">→</div>
+  </div>
+
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

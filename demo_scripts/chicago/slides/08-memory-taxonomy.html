@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Taxonomy</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .slide-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .header-block {
+      position: absolute;
+      top: 52px;
+      left: 64px;
+      right: 64px;
+    }
+
+    .cards-row {
+      position: absolute;
+      top: 168px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      gap: 24px;
+    }
+
+    .tax-card {
+      flex: 1;
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      background: #fff;
+      padding: 28px 24px 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 340px;
+    }
+
+    .tax-card.fill-yellow {
+      background: var(--yellow);
+    }
+
+    .tax-card-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+
+    .tax-card-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--black);
+      margin: 0;
+    }
+
+    .tax-card-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--black);
+      margin-top: 2px;
+      opacity: 0.6;
+    }
+
+    .tax-card-divider {
+      width: 40px;
+      height: 2.5px;
+      background: var(--black);
+      margin: 4px 0;
+    }
+
+    .tax-card-body {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--black);
+      opacity: 0.85;
+    }
+
+    .tax-card-examples {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .example-item {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--black);
+      opacity: 0.7;
+      padding: 5px 10px;
+      border: 1.5px solid var(--black);
+      display: inline-block;
+    }
+
+    .fill-yellow .example-item {
+      background: rgba(0,0,0,0.07);
+    }
+
+    .bottom-note {
+      position: absolute;
+      bottom: 60px;
+      left: 64px;
+      right: 64px;
+    }
+
+    .callout-bar {
+      background: var(--black);
+      color: var(--yellow);
+      padding: 13px 22px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .callout-bar-arrow {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 28px;
+      left: 64px;
+      right: 64px;
+      border-top: 1.5px solid var(--black);
+      display: flex;
+      justify-content: space-between;
+      padding-top: 8px;
+    }
+
+    .footer span {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div class="slide-content">
+
+      <div class="header-block reveal d1">
+        <p class="eyebrow">What agents actually need to remember</p>
+        <h2 style="margin: 6px 0 0 0;">Memory Taxonomy</h2>
+      </div>
+
+      <div class="cards-row">
+
+        <!-- Episodic -->
+        <div class="tax-card reveal d2">
+          <div class="tax-card-meta">[ TYPE_01 ]</div>
+          <div class="tax-card-name">Episodic</div>
+          <div class="tax-card-sub">What happened</div>
+          <div class="tax-card-divider"></div>
+          <div class="tax-card-body">
+            Records of past sessions — conversation turns, actions taken, prompts issued, outcomes observed.
+          </div>
+          <div class="tax-card-examples">
+            <span class="example-item">conversation turns</span>
+            <span class="example-item">actions &amp; outcomes</span>
+            <span class="example-item">session timeline</span>
+          </div>
+        </div>
+
+        <!-- Semantic — yellow fill -->
+        <div class="tax-card fill-yellow reveal d3">
+          <div class="tax-card-meta">[ TYPE_02 ]</div>
+          <div class="tax-card-name">Semantic</div>
+          <div class="tax-card-sub">The why behind choices</div>
+          <div class="tax-card-divider"></div>
+          <div class="tax-card-body">
+            Facts and decisions extracted from sessions — the reasoning and constraints your team has already settled.
+          </div>
+          <div class="tax-card-examples">
+            <span class="example-item">money = integer cents</span>
+            <span class="example-item">idempotency keys</span>
+            <span class="example-item">auth conventions</span>
+          </div>
+        </div>
+
+        <!-- Procedural -->
+        <div class="tax-card reveal d4">
+          <div class="tax-card-meta">[ TYPE_03 ]</div>
+          <div class="tax-card-name">Procedural</div>
+          <div class="tax-card-sub">How things work</div>
+          <div class="tax-card-divider"></div>
+          <div class="tax-card-body">
+            Established workflows, project conventions, and patterns — the playbook for how your system operates.
+          </div>
+          <div class="tax-card-examples">
+            <span class="example-item">deploy workflow</span>
+            <span class="example-item">review checklist</span>
+            <span class="example-item">naming patterns</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bottom-note reveal d5">
+        <div class="callout-bar">
+          <span class="callout-bar-arrow">&#9654;</span>
+          All three live in Elasticsearch — queried with Jina semantic embeddings + ES|QL
+        </div>
+      </div>
+
+      <div class="footer">
+        <span>Jeff Vestal · Elastic</span>
+        <span>Chicago Tech Week 2026</span>
+      </div>
+
+    </div>
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>

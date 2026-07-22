@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Key Design Decisions</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .decisions-grid {
+      position: absolute;
+      top: 148px;
+      left: 64px;
+      right: 64px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .decision-card {
+      background: #fff;
+      border: 2px solid var(--black);
+      box-shadow: 4px 4px 0 var(--black);
+      padding: 22px 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 360px;
+    }
+
+    .decision-card.fill-yellow {
+      background: var(--yellow);
+    }
+
+    .decision-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+
+    .decision-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--black);
+      margin: 0;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--black);
+    }
+
+    .decision-body {
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--black);
+      opacity: 0.8;
+      margin: 0;
+      flex: 1;
+    }
+
+    .decision-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      background: var(--black);
+      color: var(--yellow);
+      display: inline-block;
+      padding: 3px 8px;
+      align-self: flex-start;
+    }
+
+    .decision-card.fill-yellow .decision-tag {
+      background: var(--black);
+      color: var(--yellow);
+    }
+
+    .slide-eyebrow {
+      position: absolute;
+      top: 64px;
+      left: 64px;
+    }
+
+    .slide-heading {
+      position: absolute;
+      top: 88px;
+      left: 64px;
+    }
+
+    .slide-heading h2 {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div class="slide-eyebrow reveal d1">
+      <span class="eyebrow">What made this architecture work</span>
+    </div>
+
+    <div class="slide-heading reveal d2">
+      <h2>Key Design Decisions</h2>
+    </div>
+
+    <div class="decisions-grid">
+
+      <div class="decision-card reveal d3">
+        <span class="decision-num">[ 01 ]</span>
+        <p class="decision-title">semantic_text + Jina</p>
+        <p class="decision-body">No embedding pipeline to maintain. One field type — auto-vectorized at ingest. Drop the field in the mapping, ship data, search semantically.</p>
+        <span class="decision-tag">Zero-pipeline</span>
+      </div>
+
+      <div class="decision-card reveal d4">
+        <span class="decision-num">[ 02 ]</span>
+        <p class="decision-title">Agent Builder as MCP Server</p>
+        <p class="decision-body">No custom proxy, no middleware. Point your IDE's MCP config directly at Elastic. The platform IS the MCP endpoint.</p>
+        <span class="decision-tag">No proxy</span>
+      </div>
+
+      <div class="decision-card fill-yellow reveal d5">
+        <span class="decision-num">[ 03 ]</span>
+        <p class="decision-title">ES|QL + Semantic Search</p>
+        <p class="decision-body">Structured recall and fuzzy recall from the exact same store. Filter by session. Rank by meaning. One query language, one index.</p>
+        <span class="decision-tag">Hybrid recall</span>
+      </div>
+
+      <div class="decision-card reveal d6">
+        <span class="decision-num">[ 04 ]</span>
+        <p class="decision-title">Three-Index Schema</p>
+        <p class="decision-body">Conversation turns, extracted facts, session metadata — each index is independently queryable. No single blob to decompose at read time.</p>
+        <span class="decision-tag">Composable</span>
+      </div>
+
+      <div class="decision-card reveal d7">
+        <span class="decision-num">[ 05 ]</span>
+        <p class="decision-title">Kiro + Bedrock via MCP</p>
+        <p class="decision-body">Wired through standard MCP JSON config. No credential ceremony beyond what the IDE already manages. Any MCP-compatible client works.</p>
+        <span class="decision-tag">Standard MCP</span>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <span>Jeff Vestal · Elastic</span>
+      <span>Chicago Tech Week 2026</span>
+    </div>
+  </div>
+  <script src="/js/fuckslides.js"></script>
+</body>
+</html>
